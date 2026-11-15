@@ -133,8 +133,14 @@ search box (name or alias) and two filters: status and country.
 **The cluster wallet is not set here.** `church.cluster_wallet` (the address the 10%
 of GD purchases and guide scholarships is routed to) is configured by the **cluster
 initiator** on the cluster page (`/{lang}/cluster`, the single private page since R-#299),
-which recommends a multisig wallet shared by the cluster's pastors. The verifier can still correct it in the church
-modal (*Cluster wallet*) when a cluster cannot do it, as a support path.
+which recommends a multisig wallet shared by the cluster's pastors. The verifier can correct it
+in the church modal (*Cluster wallet*) while the cluster has **not** requested the presentation.
+
+**Once the presentation is requested, the wallet is fixed for everybody.** From `requested`
+(and through `under_review`, `approved`, `sent` and `answered`, which is terminal) the API answers
+`409 gd_fields_locked` to the initiator and to the verifier, and the church modal disables the
+field. A real emergency (a wallet compromised between the presentation and the release) is solved
+by support, editing the database directly — never from the panel.
 
 **Changing it with funds in it asks first.** The `ClusterFundsV2` fund is indexed by
 the wallet address, so moving the wallet does not move the money: the old fund stays in

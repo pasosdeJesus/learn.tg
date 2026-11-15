@@ -4,8 +4,9 @@
 // el nombre interno; muestra las iglesias que lo componen, el total recaudado, el estado
 // del proceso y la transacción de liberación cuando ya recibió sus fondos. No publica
 // pastores, billeteras ni invitaciones.
-import { useEffect, useState, use } from 'react'
+import { useCallback, useEffect, useState, use } from 'react'
 import Link from 'next/link'
+import { DonateModal } from '@/components/DonateModal'
 
 interface PublicCluster {
   slug: string
@@ -19,6 +20,8 @@ interface PublicCluster {
   churches: { name: string; joined_at: string | null }[]
   usdt_total: number
   slearn_total: number
+  /** Billetera del fondo para donar; llega sólo mientras se pueda donar. */
+  donation_wallet: string | null
   release: { at: string | null; amount: number | null; slearn: number | null; tx: string | null } | null
 }
 
@@ -41,6 +44,9 @@ const T = {
     presented: 'Presented to Global Disciples',
     answered: 'Global Disciples answered',
     release: 'Fund release transaction',
+    donate: 'Donate to the cluster fund',
+    donateHint: '80% of your donation goes to this cluster fund; the rest to pdJ and cashback.',
+    donateClosed: 'This cluster no longer receives donations: it was presented to Global Disciples.',
     none: '—',
   },
   es: {
@@ -57,6 +63,9 @@ const T = {
     presented: 'Presentado a Global Disciples',
     answered: 'Global Disciples respondió',
     release: 'Transacción de liberación del fondo',
+    donate: 'Donar al fondo del clúster',
+    donateHint: 'El 80% de tu donación va a este fondo del clúster; el resto a pdJ y cashback.',
+    donateClosed: 'Este clúster ya no recibe donaciones: fue presentado a Global Disciples.',
     none: '—',
   },
 } as const
@@ -67,8 +76,9 @@ export default function PublicClusterPage({ params }: { params: Promise<{ lang: 
   const [cluster, setCluster] = useState<PublicCluster | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [donating, setDonating] = useState(false)
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetch(`/api/clusters/${encodeURIComponent(slug)}`)
       .then((r) => {
         if (!r.ok) throw new Error('not found')
@@ -78,6 +88,8 @@ export default function PublicClusterPage({ params }: { params: Promise<{ lang: 
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [slug])
+
+  useEffect(() => { load() }, [load])
 
   const statusLabel = (c: PublicCluster) => {
     if (c.finished) return t('finished')
@@ -125,6 +137,24 @@ export default function PublicClusterPage({ params }: { params: Promise<{ lang: 
             ))}
           </ul>
 
+          <div className="mt-6 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm">
+            <p className="text-xs text-gray-500 mb-1">{t('raised')} → {t('donate')}</p>
+            {cluster.donation_wallet ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setDonating(true)}
+                  className="rounded bg-primary px-4 py-2 text-sm font-semibold text-white"
+                >
+                  {t('donate')}
+                </button>
+                <p className="text-xs text-gray-500 mt-2">{t('donateHint')}</p>
+              </>
+            ) : (
+              <p className="text-xs text-gray-500">{t('donateClosed')}</p>
+            )}
+          </div>
+
           {cluster.release && (
             <div className="mt-6 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm">
               <p className="text-xs text-gray-500 mb-1">{t('release')}</p>
@@ -146,6 +176,20 @@ export default function PublicClusterPage({ params }: { params: Promise<{ lang: 
             </div>
           )}
         </div>
+      )}
+
+      {donating && cluster?.donation_wallet && (
+        <DonateModal
+          target={{
+            type: 'cluster-donation',
+            clusterWallet: cluster.donation_wallet,
+            clusterName: cluster.slug,
+          }}
+          isOpen
+          onClose={() => setDonating(false)}
+          onSuccess={() => { setDonating(false); load() }}
+          lang={lang}
+        />
       )}
     </div>
   )

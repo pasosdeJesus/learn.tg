@@ -50,6 +50,9 @@ export interface ChurchItem {
   pastor_telegram?: string; city_name?: string; city_db_name?: string; denomination?: string
   country_name?: string; registration?: string; registration_photo?: string; registration_verified?: boolean
   cluster_wallet?: string | null
+  /** Fija desde que el clúster solicita la presentación a GD (R-#161 §9). */
+  cluster_wallet_locked?: boolean
+  cluster_gd_status?: string | null
   created_at?: string
 }
 
@@ -793,7 +796,14 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
       setTimeout(onSaved, 800)
     } catch (e: any) {
       const text = e?.message || 'Error'
-      if (!extra.confirmMigrate && text === 'cluster_wallet_has_funds') {
+      if (text === 'gd_fields_locked' || String(extra?.code || '') === 'gd_fields_locked') {
+        toast({
+          title: lang === 'es'
+            ? 'La billetera está fija mientras la presentación esté con pdJ o con Global Disciples'
+            : 'The wallet is fixed while the presentation is with pdJ or with Global Disciples',
+          variant: 'destructive',
+        })
+      } else if (!extra.confirmMigrate && text === 'cluster_wallet_has_funds') {
         const ok = window.confirm(lang === 'es'
           ? 'Esta billetera de clúster ya tiene fondos. Cambiarla NO los mueve: quedarán en la billetera anterior. ¿Cambiarla de todos modos?'
           : 'This cluster wallet already holds funds. Changing it does NOT move them: they stay in the previous wallet. Change it anyway?')
@@ -839,7 +849,19 @@ export function ChurchEditModal({ lang, t, church, onClose, onSaved }: { lang: s
           <InputField label="Telegram" value={form.pastor_telegram} onChange={v => setF('pastor_telegram', v)} />
           <InputField label={t('denomination')} value={form.denomination} onChange={v => setF('denomination', v)} />
           <InputField label={lang === 'es' ? 'Registro' : 'Registration'} value={form.registration} onChange={v => setF('registration', v)} />
-          <InputField label={lang === 'es' ? 'Billetera del clúster' : 'Cluster wallet'} value={form.cluster_wallet} onChange={v => setF('cluster_wallet', v)} />
+          <InputField
+            label={lang === 'es' ? 'Billetera del clúster' : 'Cluster wallet'}
+            value={form.cluster_wallet}
+            onChange={v => setF('cluster_wallet', v)}
+            disabled={!!church.cluster_wallet_locked}
+          />
+          {church.cluster_wallet_locked && (
+            <p className="text-xs text-amber-700 -mt-1">
+              {lang === 'es'
+                ? `Fija: el clúster está en presentación a Global Disciples (${church.cluster_gd_status}). Un caso extremo se resuelve con soporte, tocando la base de datos.`
+                : `Fixed: the cluster presentation is with Global Disciples (${church.cluster_gd_status}). An extreme case is handled by support, editing the database.`}
+            </p>
+          )}
         </div>
         <p className="text-[11px] text-amber-700">
           {lang === 'es'

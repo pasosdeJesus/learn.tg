@@ -288,6 +288,17 @@ export async function getCluster(
       status: cluster.status ?? (members.length >= 3 ? 'active' : 'pending'),
       members: membersWithIndicators,
       history,
+      // La liberación del fondo (R-#161 §10) queda en la historia como `fund_released`
+      // con el hash de la transacción; la página privada la muestra para que el pastor
+      // no tenga que ir a la pública a comprobarla.
+      release: cluster.fund_released_at
+        ? {
+            at: cluster.fund_released_at,
+            amount: cluster.fund_released_amount,
+            slearn: cluster.fund_released_slearn,
+            tx: (history as any[]).find((row) => row.event_type === 'fund_released')?.new_value ?? null,
+          }
+        : null,
       funds: {
         cluster: clusterFunds ? summarizeFunds(clusterFunds) : null,
         country: countryFunds

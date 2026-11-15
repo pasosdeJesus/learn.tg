@@ -144,7 +144,19 @@ export async function getPublicCluster(deps: GdclusterDeps, params: Record<strin
       .execute()
 
     const country = cluster.country_id
-      ? await db.selectFrom('msip_pais').select(['nombre as name', 'alfa2 as code']).where('id', '=', cluster.country_id).executeTakeFirst()
+      ? await db.selectFrom('msip_pais')
+        .select(['nombre as name', 'alfa2 as code', 'tipo_region'])
+        .where('id', '=', cluster.country_id)
+        .executeTakeFirst()
+      : null
+
+    // Donar necesita la billetera del fondo, y sólo se publica mientras se pueda donar
+    // (región tipo 1, fondo no liberado y clúster no presentado a GD), igual que el
+    // ranking: después de presentarlo o liberarlo el botón desaparece.
+    const presented = !!cluster.gd_status && ['sent', 'answered'].includes(cluster.gd_status)
+    const donationWallet = cluster.cluster_wallet && !cluster.fund_released_at && !presented
+      && country?.tipo_region === 1
+      ? cluster.cluster_wallet
       : null
 
     const fundsRow = cluster.cluster_wallet
@@ -184,6 +196,7 @@ export async function getPublicCluster(deps: GdclusterDeps, params: Record<strin
       created_at: cluster.created_at,
       country_name: country?.name ?? null,
       country_code: country?.code ?? null,
+      donation_wallet: donationWallet,
       church_count: churches.length,
       churches,
       usdt_total: Number(funds?.usdt_total ?? 0),

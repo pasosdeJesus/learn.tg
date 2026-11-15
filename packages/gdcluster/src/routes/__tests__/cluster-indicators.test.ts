@@ -96,6 +96,30 @@ describe('getCluster — indicadores del clúster', () => {
     expect(json.country_code).toBe('CO')
   })
 
+  it('reports the fund release with its transaction (R-#161 §10)', async () => {
+    helpers.getClusterHistory.mockResolvedValue([
+      { event_type: 'fund_released', old_value: null, new_value: '0xabc123', changed_by: 5, created_at: new Date() },
+    ])
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({
+        ...CLUSTER,
+        fund_released_at: new Date('2026-11-10T00:00:00Z'),
+        fund_released_amount: '12.50',
+        fund_released_slearn: '3.00',
+      })
+      .mockResolvedValueOnce({ cluster_wallet: WALLET })
+      .mockResolvedValueOnce({ name: 'Colombia', code: 'CO' })
+    mockExecute.mockResolvedValue([])
+
+    const json = await (await getCluster(deps() as GdclusterDeps, new NextRequest('http://localhost/api/cluster/3'), { id: '3' })).json()
+    expect(json.release).toEqual({
+      at: '2026-11-10T00:00:00.000Z',
+      amount: '12.50',
+      slearn: '3.00',
+      tx: '0xabc123',
+    })
+  })
+
   it('returns null balances when the chain cannot be read', async () => {
     helpers.readClusterFunds.mockResolvedValue(null)
     helpers.readCountryFunds.mockResolvedValue(null)

@@ -268,7 +268,9 @@ export function ClusterPresentationPanel({
         </div>
       )}
 
-      {request && (request.evaluation || request.suggestions) && (
+      {/* La evaluación y las sugerencias de pdJ pertenecen a la tarjeta «Present to
+          Global Disciples»: sin el filtro se repetían en las cuatro tarjetas. */}
+      {(section === 'all' || section === 'cancel') && request && (request.evaluation || request.suggestions) && (
         <div className="rounded border border-gray-200 bg-white p-3 text-xs text-gray-700 space-y-1">
           {request.evaluation && (
             <p><span className="font-semibold">{tr('evaluation')}:</span> {request.evaluation}</p>

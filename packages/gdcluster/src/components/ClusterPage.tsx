@@ -41,6 +41,8 @@ const tEn = {
   donationsLabel: 'donations',
   pastor: 'Pastor',
   notAvailable: 'Not available',
+  release: 'Fund released to the cluster wallet',
+  releaseTx: 'Release transaction',
   budgetTitle: 'Fourth year budget',
   directorTitle: 'Program Director',
   approvalsTitle: 'Pastors approval',
@@ -121,6 +123,8 @@ const tEs: typeof tEn = {
   donationsLabel: 'donaciones',
   pastor: 'Pastor',
   notAvailable: 'No disponible',
+  release: 'Fondo liberado a la billetera del clúster',
+  releaseTx: 'Transacción de liberación',
   budgetTitle: 'Presupuesto del cuarto año',
   directorTitle: 'Director del programa',
   approvalsTitle: 'Aprobación de los pastores',
@@ -275,6 +279,8 @@ interface ClusterData {
     country: { usdt: string; slearn: string } | null
   }
   donations?: { count: number; usdt_total: number; slearn_total: number }
+  /** Liberación del fondo cuando GD respondió (R-#161 §10). */
+  release?: { at: string | null; amount: number | null; slearn: number | null; tx: string | null } | null
 }
 
 interface PresentationPastor {
@@ -335,6 +341,14 @@ const CLUSTER_MISSING: Record<string, keyof typeof tEn> = {
 }
 
 const MIN_CHURCHES = 3
+
+/** Explorador de la cadena configurada (el sitio de desarrollo corre en Celo Sepolia). */
+function releaseExplorer(): string {
+  const auth = (process.env.NEXT_PUBLIC_AUTH_URL || '').toLowerCase()
+  return auth === 'https://learn.tg' || auth === 'https://learntg.pdj.app'
+    ? 'https://celoscan.io'
+    : 'https://sepolia.celoscan.io'
+}
 
 export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; deps: ClusterPageDeps }) {
   const t = (key: keyof typeof tEn) =>
@@ -1010,6 +1024,26 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
                   </div>
                 </div>
               ) : null}
+              {cluster.release && (
+                <div className="mt-3 rounded border border-gray-200 bg-gray-50 p-2 text-xs text-gray-700">
+                  <p className="font-semibold mb-1">{t('release')}</p>
+                  <p>
+                    {Number(cluster.release.amount ?? 0).toFixed(2)} USDT ·{' '}
+                    {Number(cluster.release.slearn ?? 0).toFixed(2)} SLEARN
+                    {cluster.release.at ? ` · ${new Date(cluster.release.at).toLocaleDateString(lang)}` : ''}
+                  </p>
+                  {cluster.release.tx && (
+                    <a
+                      href={`${releaseExplorer()}/tx/${cluster.release.tx}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline break-all font-mono"
+                    >
+                      {t('releaseTx')}: {cluster.release.tx}
+                    </a>
+                  )}
+                </div>
+              )}
               {panel('cancel')}
             </section>
           )}

@@ -350,8 +350,10 @@ duplicated routes. Implemented (2026-08-31, migration
   (80% of GD donations); the column is not moved in this phase. The **cluster initiator**
   sets it from the cluster page, with a recommendation to use a multisig shared by the
   cluster's pastors; changing it later does not move funds already credited (the fund is
-  keyed by the previous address). The verifier can still correct it in the church modal
-  (`PATCH /api/admin/church/[id]`) as a support path.
+  keyed by the previous address). From the moment the presentation is requested the wallet is
+  **fixed** and neither the initiator nor the verifier can change it (`409 gd_fields_locked`,
+  also in `PATCH /api/admin/church/[id]`); an extreme case (a compromised wallet between the
+  presentation and the release) is handled by support, editing the database directly.
 - **The 10% of the cluster's students** (course purchases and guide scholarships) goes to
   the cluster fund while that fund exists. A cluster becomes **verified** in the contract
   when pdJ presents it (`sent`, "presented = verified"); it stays in the ranking (shown in

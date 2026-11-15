@@ -16,11 +16,17 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
   )
 }
 
-export function InputField({ label, value, onChange, type }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
+export function InputField({ label, value, onChange, type, disabled }: { label: string; value: string; onChange: (v: string) => void; type?: string; disabled?: boolean }) {
   return (
     <div>
       <label className="block text-xs text-gray-500 mb-0.5">{label}</label>
-      <input type={type || 'text'} value={value} onChange={e => onChange(e.target.value)} className="w-full border rounded px-2 py-1 text-sm" />
+      <input
+        type={type || 'text'}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        disabled={disabled}
+        className={`w-full border rounded px-2 py-1 text-sm${disabled ? ' bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+      />
     </div>
   )
 }
