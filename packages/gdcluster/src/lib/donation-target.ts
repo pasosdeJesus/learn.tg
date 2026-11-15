@@ -367,8 +367,8 @@ export function getTargetRecipient(_target: PaymentTarget): Address | undefined 
 export function getTargetEndpoint(target: PaymentTarget): string {
   switch (target.type) {
     case 'course-donation': return '/api/add-donation'
-    case 'cluster-donation': return '/api/gdcluster/donations/verify'
-    case 'country-donation': return '/api/gdcluster/donations/verify'
+    case 'cluster-donation': return '/api/cluster/donations/verify'
+    case 'country-donation': return '/api/cluster/donations/verify'
     case 'campaign-donation': return `/api/donations/${target.slug}/verify`
   }
 }

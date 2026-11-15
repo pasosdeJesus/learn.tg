@@ -84,19 +84,19 @@ export interface RouteHandlers {
  */
 export function createGdclusterApp(deps: GdclusterDeps): Record<string, RouteHandlers> {
   return {
-    'gdcluster/ranking/clusters': {
+    'clusters/ranking/clusters': {
       GET: () => rankingClusters(deps),
     },
-    'gdcluster/ranking/countries': {
+    'clusters/ranking/countries': {
       GET: () => rankingCountries(deps),
     },
-    'gdcluster/ranking/funds': {
+    'clusters/ranking/funds': {
       GET: () => rankingFunds(deps),
     },
-    'gdcluster/donations/verify': {
+    'cluster/donations/verify': {
       POST: (req) => verifyDonation(deps, req as NextRequest),
     },
-    'gdcluster/donations/history': {
+    'cluster/donations/history': {
       GET: (req) => donationHistory(deps, req as NextRequest),
     },
     'donations/[slug]/verify': {

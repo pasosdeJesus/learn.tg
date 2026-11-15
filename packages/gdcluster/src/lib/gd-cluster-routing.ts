@@ -238,7 +238,7 @@ export async function routeToClusterFunds(
  *   salida ya quedó registrada en la fila del pago/beca que originó el desvío;
  *   estas filas informan el destino del fondo, no mueven el saldo del usuario.
  * - No se expone en superficies públicas (ranking de usuarios, métricas,
- *   donaciones, referidos); solo en `gdcluster/ranking/funds`.
+ *   donaciones, referidos); solo en `clusters/ranking/funds`.
  */
 export async function recordClusterContribution(
   ctx: ClusterContributionCtx,

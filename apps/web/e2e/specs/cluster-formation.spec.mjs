@@ -247,7 +247,7 @@ async function main() {
     // 8. Ranking and public API: alias, status and no internal name
     // ══════════════════════════════════════════════════════════════
     console.log('\n── 8. Ranking: alias and status ──')
-    const rank = await (await fetch(`${base}/api/gdcluster/ranking/clusters`)).json().catch(() => ({ clusters: [] }))
+    const rank = await (await fetch(`${base}/api/clusters/ranking/clusters`)).json().catch(() => ({ clusters: [] }))
     const row = (rank.clusters || []).find((c) => c.id === clusterId)
     if (row && row.display_name === alias) ok(`Ranking shows the alias (display_name=${row.display_name})`)
     else { console.log(`  ranking row: ${JSON.stringify(row)}`); fail('Ranking without the updated alias') }
@@ -280,7 +280,7 @@ async function main() {
       if (row.status === 'active') ok('The ranking reports the cluster as active after the update')
       else fail(`The ranking reports status=${row.status}, expected active`)
     } else {
-      fail('GET /api/gdcluster/ranking/clusters does not expose the cluster status')
+      fail('GET /api/clusters/ranking/clusters does not expose the cluster status')
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -316,7 +316,7 @@ async function main() {
     const disbanded = await (await authFetch(`${base}/api/admin/clusters?status=disbanded&${q}`)).json().catch(() => ({ clusters: [] }))
     if ((disbanded.clusters || []).some((c) => c.id === clusterId)) ok('The disbanded cluster is listed under status=disbanded')
     else fail('The disbanded cluster is not listed under status=disbanded')
-    const rank2 = await (await fetch(`${base}/api/gdcluster/ranking/clusters`)).json().catch(() => ({ clusters: [] }))
+    const rank2 = await (await fetch(`${base}/api/clusters/ranking/clusters`)).json().catch(() => ({ clusters: [] }))
     if (!(rank2.clusters || []).some((c) => c.id === clusterId)) ok('The ranking excludes the disbanded cluster')
     else fail('The disbanded cluster is still in the ranking')
   }

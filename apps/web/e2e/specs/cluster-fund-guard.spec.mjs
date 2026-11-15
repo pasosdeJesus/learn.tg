@@ -80,7 +80,7 @@ async function main() {
   // billeteras se **reutilizan** entre corridas: si una ya recibió el 10% de otra
   // campaña el fondo no está vacío y aceptar la solicitud es correcto. El ranking
   // (público, desde `transaction`) dice cuánto tiene esa billetera en el registro.
-  const ranking = await apiOn(initiator.page, '/api/gdcluster/ranking/funds')
+  const ranking = await apiOn(initiator.page, '/api/clusters/ranking/funds')
   const funds = Array.isArray(ranking.body?.clusters) ? ranking.body.clusters : []
   const entry = funds.find(
     (row) => String(row.cluster_wallet || '').toLowerCase() === wallet.toLowerCase(),

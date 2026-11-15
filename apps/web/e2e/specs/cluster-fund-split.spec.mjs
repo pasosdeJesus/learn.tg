@@ -86,7 +86,7 @@ async function ensureClusterFund({ cluster, creds, side, ok, fail, usdt = 2 }) {
       fail(`${side}: la transferencia de ${usdt} USDT no se confirmó`)
       return
     }
-    const verified = await apiOn(cluster.initiator.page, '/api/gdcluster/donations/verify', {
+    const verified = await apiOn(cluster.initiator.page, '/api/cluster/donations/verify', {
       method: 'POST',
       body: JSON.stringify({
         walletAddress: cluster.wallet,

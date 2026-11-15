@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Smoke test: GD cluster/country donation endpoint (/api/gdcluster/donations/verify).
+ * Smoke test: GD cluster/country donation endpoint (/api/cluster/donations/verify).
  *
  * HTTP-only, no browser. Tests validation paths:
  *   - Missing params → 400
@@ -96,13 +96,13 @@ async function main() {
 
   // ── 1. Missing params ──
   console.log('\n── 1. Missing required params ──')
-  let r = await fetch(`${SITE}/api/gdcluster/donations/verify`, {
+  let r = await fetch(`${SITE}/api/cluster/donations/verify`, {
     method: 'POST', headers, body: JSON.stringify({}),
   })
   if (r.status === 400) ok('Empty body → 400')
   else fail(`Empty body → ${r.status}`)
 
-  r = await fetch(`${SITE}/api/gdcluster/donations/verify`, {
+  r = await fetch(`${SITE}/api/cluster/donations/verify`, {
     method: 'POST', headers,
     body: JSON.stringify({ walletAddress: wallet }),
   })
@@ -111,7 +111,7 @@ async function main() {
 
   // ── 2. Bad auth ──
   console.log('\n── 2. Authentication failure ──')
-  r = await fetch(`${SITE}/api/gdcluster/donations/verify`, {
+  r = await fetch(`${SITE}/api/cluster/donations/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -124,7 +124,7 @@ async function main() {
 
   // ── 3. Non-pilot country ──
   console.log('\n── 3. Non-pilot country ──')
-  r = await fetch(`${SITE}/api/gdcluster/donations/verify`, {
+  r = await fetch(`${SITE}/api/cluster/donations/verify`, {
     method: 'POST', headers,
     body: JSON.stringify({
       walletAddress: wallet, countryCode: 'US',

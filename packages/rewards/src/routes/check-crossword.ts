@@ -83,10 +83,6 @@ export function withDeadline<T>(promise: Promise<T>, ms: number, label: string):
   })
 }
 
-export async function checkCrosswordGet(): Promise<Response> {
-  return NextResponse.json({ error: 'Expecting POST request' }, { status: 400 })
-}
-
 /**
  * Tiempo que falta del enfriamiento de **este** curso
  * (`studentCooldowns(courseId, student)` del contrato V5, 1 día). Devuelve `''` si el

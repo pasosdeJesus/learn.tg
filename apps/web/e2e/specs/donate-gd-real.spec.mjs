@@ -7,9 +7,9 @@
  *
  * Flow:
  *   1. SIWE sign-in (test wallet from apps/.env)
- *   2. Read country fund (Sierra Leona) BEFORE via /api/gdcluster/ranking/funds
+ *   2. Read country fund (Sierra Leona) BEFORE via /api/clusters/ranking/funds
  *   3. Real on-chain USDT transfer from test wallet → backend wallet
- *   4. Call /api/gdcluster/donations/verify with countryCode=SL
+ *   4. Call /api/cluster/donations/verify with countryCode=SL
  *   5. Verify response.distribution = 80% fund / 10% pdJ / 10% cashback (SLEARN),
  *      sums to 100% of the donated value
  *   6. Verify /api/user-transactions/{userId} rows: donation (multiline
@@ -132,7 +132,7 @@ async function rpcRetry(fn, retries = 5) {
 }
 
 async function getCountryFund() {
-  const res = await fetch(`${SITE}/api/gdcluster/ranking/funds`)
+  const res = await fetch(`${SITE}/api/clusters/ranking/funds`)
   if (!res.ok) throw new Error(`funds: ${res.status}`)
   const data = await res.json()
   const entry = (data.countries || []).find(c => c.country_code === COUNTRY_CODE)
@@ -215,9 +215,9 @@ async function main() {
   if (receipt.status === 'success') ok(`USDT transfer confirmed (tx ${usdtHash.slice(0, 10)}...)`)
   else { fail('USDT transfer failed'); process.exit(1) }
 
-  // ── 3. Call /api/gdcluster/donations/verify ──
-  console.log('\n── 3. POST /api/gdcluster/donations/verify ──')
-  const res = await fetch(`${SITE}/api/gdcluster/donations/verify`, {
+  // ── 3. Call /api/cluster/donations/verify ──
+  console.log('\n── 3. POST /api/cluster/donations/verify ──')
+  const res = await fetch(`${SITE}/api/cluster/donations/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(auth.cookies ? { Cookie: auth.cookies } : {}) },
     body: JSON.stringify({

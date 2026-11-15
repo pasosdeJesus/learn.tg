@@ -111,7 +111,7 @@ control (2026-11-13).
 ### Donations to funds
 
 1. User transfers USDT/SLEARN to the backend wallet.
-2. `gdcluster/donations/verify` verifies the ERC-20 transfer receipt
+2. `cluster/donations/verify` verifies the ERC-20 transfer receipt
    (`verifyTransfer` from the rewards lib), checks replay protection, and
    credits the cluster/country fund.
 3. The distribution breakdown (70% vault / 10% SLEARN reward / 5% pdJ /

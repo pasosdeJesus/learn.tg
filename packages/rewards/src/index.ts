@@ -9,7 +9,7 @@ import { claimCeloUbi } from './routes/claim-celo-ubi.js'
 import { scholarshipStatus } from './routes/scholarship.js'
 import { addDonation } from './routes/add-donation.js'
 import { premiumPurchase } from './routes/premium-purchase.js'
-import { checkCrosswordGet, checkCrosswordPost } from './routes/check-crossword.js'
+import { checkCrosswordPost } from './routes/check-crossword.js'
 
 export interface AuthUser {
   usuario: any
@@ -179,7 +179,6 @@ export function createRewardsApp(deps: RewardsDeps): Record<string, RouteHandler
       POST: (req) => premiumPurchase(deps, req as NextRequest),
     },
     'check-crossword': {
-      GET: () => checkCrosswordGet(),
       POST: (req) => checkCrosswordPost(deps, req as NextRequest),
     },
   }

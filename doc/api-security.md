@@ -133,7 +133,33 @@ The audit follows that re-export: it parses the engine registry in
 `packages/<engine>/src/index.ts`, maps the key and method to the handler in
 `src/routes/<file>.ts`, and classifies **each method** by the auth its handler (or
 its local helpers, via the call graph in that file) uses. The output marks those
-lines with `engine <name>` and counts them in the `engine:` total.
+lines with `engine <name>` and ends with the breakdown, so the total is never a
+number without a class:
+
+```text
+── Motor gdcluster (37 rutas) ──
+  🔒 admin/clusters [GET] (admin-only)
+  …
+  ✅ clusters [GET] (public) — …
+
+── Motor rewards (12 rutas) ──
+  …
+
+Rutas de motor por clase:
+  gdcluster   37  public 8 · authenticated 21 · admin-only 8
+  rewards     12  public 7 · authenticated 5
+
+125 passed / 0 failed — advisories nombre: 6
+  core     76  public 16 · authenticated 34 · admin-only 26
+  engine   49  public 15 · authenticated 26 · admin-only 8
+  total   125  public 31 · authenticated 60 · admin-only 34
+```
+
+A public prefix in `PUBLIC_ENDPOINTS` does not force every subroute to be public: if a
+subroute authenticates (and does not use only admin auth for an extra field), it is counted
+with its real class and the run prints an `ℹ️` note — that is how
+`directory/churches/[id]/claim` appears as authenticated instead of inheriting the
+`directory/churches` prefix.
 
 - Engine handlers **without** auth fail the run unless the route is declared in
   `ENGINE_PUBLIC_ROUTES` (key `'<METHOD> <engine>:<registry key>'`) with a reason.
@@ -157,7 +183,7 @@ The public engine routes declared in `ENGINE_PUBLIC_ROUTES` are read-only:
 `check-crossword` GET (always 400), `churches/fund`, `credential/[tokenId]`,
 `credential/wallet/[wallet]`, `referrals/fund`, `slearn/metadata`, `ubi-report`,
 `ubi-report-wallet`, the campaign transparency endpoints
-(`donations/[slug]/balance|movements|transparency`) and `gdcluster/ranking/*`.
+(`donations/[slug]/balance|movements|transparency`) and `clusters/ranking/*`.
 
 ### When to run it
 

@@ -105,9 +105,9 @@ describe('getTargetEndpoint', () => {
 
   it('routes cluster and country donations to the gdcluster verify endpoint', () => {
     expect(getTargetEndpoint({ type: 'cluster-donation', clusterWallet: '0x1', clusterName: 'SL' }))
-      .toBe('/api/gdcluster/donations/verify')
+      .toBe('/api/cluster/donations/verify')
     expect(getTargetEndpoint({ type: 'country-donation', countryCode: 'SL', countryName: 'SL' }))
-      .toBe('/api/gdcluster/donations/verify')
+      .toBe('/api/cluster/donations/verify')
   })
 })
 

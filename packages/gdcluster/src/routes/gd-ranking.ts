@@ -70,7 +70,7 @@ export async function rankingCountries(deps: GdclusterDeps) {
 }
 
 /**
- * GET /api/gdcluster/ranking/funds
+ * GET /api/clusters/ranking/funds
  *
  * Accumulated funds routed to clusters/countries for the Global Disciples
  * landing page ranking section: direct donations and the 10% automatically

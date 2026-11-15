@@ -136,7 +136,7 @@ Exit code is `1` if any check fails; each spec prints its own `passed / failed`.
 | `transparency.spec.mjs` | `/en/transparency` and `/es/transparency` plus the `/api/transparency` contract (`data`, `totals`, `rules`) |
 | `verification-timezone.spec.mjs` | `/api/verification/availability` answers; with CalDAV unconfigured the `500` is informational, not a failure |
 | `pastor-bonus.spec.mjs` | Churches fund (`/api/churches/fund`, balances), `/en/pastor` and `/es/pastor`, and the legacy `gdcluster/pastors` → `/pastor` redirects |
-| `gd-cluster-status.spec.mjs` | R-#220: `/api/gdcluster/ranking/clusters` exposes the `status` of every cluster (pending/active, disbanded excluded), the country ranking answers, the ranking page renders, and `/api/admin/clusters` answers **403** without a session |
+| `gd-cluster-status.spec.mjs` | R-#220: `/api/clusters/ranking/clusters` exposes the `status` of every cluster (pending/active, disbanded excluded), the country ranking answers, the ranking page renders, and `/api/admin/clusters` answers **403** without a session |
 
 Measured against `https://learn.tg` on 2026-10-27: **6/6 specs ok**
 (`landing-page` 3 checks, `transparency` 11, `pastor-bonus` 10, fund with
@@ -383,7 +383,7 @@ tokens or pays; `Data` = creates/deletes domain rows.
 | `transparency.spec.mjs` | — | `/en/transparency` and `/es/transparency` plus the `/api/transparency` contract (`data`, `totals`, `rules`; reserves and coverage when the on-chain reads answer; `premiumSlearn` without the per-course accounting, which is internal) |
 | `verification-timezone.spec.mjs` | — | `/api/verification/availability`: 7-day window and timezone echo (`America/Bogota`, `America/Caracas`, `UTC`); a `500` means CalDAV is not configured |
 | `pastor-bonus.spec.mjs` | — | R-#192/R-#283: churches fund (address + SLEARN/USDT), `/en/pastor` and `/es/pastor` landing, and the legacy `gdcluster/pastors` + `redgd/pastores` paths → `308` to `/{lang}/pastor` |
-| `gd-cluster-status.spec.mjs` | — | R-#220: `/api/gdcluster/ranking/clusters` exposes the `status` of every row (pending/active, disbanded excluded), `/api/gdcluster/ranking/countries` answers, `/en/gdcluster/ranking` renders, and `/api/admin/clusters` → **403** without a session |
+| `gd-cluster-status.spec.mjs` | — | R-#220: `/api/clusters/ranking/clusters` exposes the `status` of every row (pending/active, disbanded excluded), `/api/clusters/ranking/countries` answers, `/en/gdcluster/ranking` renders, and `/api/admin/clusters` → **403** without a session |
 | `rails-health.spec.mjs` | — | Rails backend health (`NEXT_PUBLIC_API_BASE/proyectosfinancieros.json`): 200 with courses → UP; network error/502 → DOWN. Informative: exits 0 unless `RAILS_CHECK=1`. Production does not need Rails |
 | `caldav-http.spec.mjs` | — | CalDAV connectivity (PROPFIND/OPTIONS to Radicale) |
 | `church-directory.spec.mjs` | —* | R-#164: `GET /api/directory/churches` shape (`churches`/`total`/`notRecommended`), detail and 404, country filter, claim without session → 401, admin list without a verifier → 403, `/en/directory/churches` → 200. (*The POST/PATCH are expected to be rejected) |
@@ -394,7 +394,7 @@ tokens or pays; `Data` = creates/deletes domain rows.
 | `premium-price.spec.mjs` | Session, User | Price per country (R-#128 §4.2): creates two profiles (Sierra Leone and Colombia) and compares `/api/courses/premium/price` — high HDI pays more, SLEARN keeps 10%, amounts fall in the calibration (SL ~0.50, CO ~2.20). No Chrome, no funds |
 | `prerequisites.spec.mjs` | Session, Data | The wallet setup of §3.2 |
 | `donate-course.spec.mjs` | Session | Course donation endpoint `/api/add-donation`: validation paths (400/401) |
-| `donate-gd.spec.mjs` | Session | GD cluster/country donation `/api/gdcluster/donations/verify`: validation paths (400/401/403) |
+| `donate-gd.spec.mjs` | Session | GD cluster/country donation `/api/cluster/donations/verify`: validation paths (400/401/403) |
 | `donate-campaign.spec.mjs` | Session | Campaign donation (R-#223, `/api/donations/{slug}/verify` + balance): 404/400/401, `pdjSharePct` bounds and the multi-chain balance shape |
 | `premium-purchase.spec.mjs` | Session, Funds | Money path of a premium purchase over HTTP (R-#128 §4.2): new verified pastor → price → pastor transfers to the backend → `POST /api/courses/premium/purchase` → `processPayment` on-chain → distribution → course access → row in `mine`. **Off by default**: without `PURCHASE=1` only price and authentication are checked. With `PURCHASE=1 SLEARN_PCT=0\|50\|100` it spends test funds and asks for payment from the wallet that publishes `/api/churches/fund` |
 | `celo-claim.spec.mjs` | Session, Funds | Full crossword → submit → scholarship claim → CELO UBI claim, plus `/api/metrics` checks |
@@ -663,7 +663,7 @@ is already credited.
 **The cluster fund belongs to the initiator church wallet, and churches are reused.**
 `cluster-fund-guard` needs the fund to be **empty**, but a reused church keeps the
 `cluster_wallet` of its previous campaign, and that address may already hold the 10%
-of earlier purchases and scholarships. The spec reads `/api/gdcluster/ranking/funds`
+of earlier purchases and scholarships. The spec reads `/api/clusters/ranking/funds`
 first and prints `[fondo] registro: … USDT / … SLEARN`; when the wallet already has
 money it reports `[NOTE]` (the acceptance is the correct behaviour) instead of
 failing, and the refusal itself stays covered by the route unit tests

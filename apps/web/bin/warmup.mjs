@@ -41,8 +41,8 @@ const URLS = [
   '/ref/5F75CC53',
   // APIs de guías/cursos (compilan el route handler en la primera visita)
   '/api/guide?courseId=103&lang=en&prefix=web3-and-ubi&guide=guide3&guideNumber=3',
-  '/api/gdcluster/donations/history',
-  '/api/gdcluster/donations/verify',
+  '/api/cluster/donations/history',
+  '/api/cluster/donations/verify',
   // Campañas (https://github.com/pasosdeJesus/learn.tg/issues/223): página de donación Lensenia + balance multi-cadena + verify
   '/en/donations/lensenia',
   '/es/donations/lensenia',
@@ -56,9 +56,9 @@ const URLS = [
   '/api/user-transactions/191',
   '/api/self-verify',
   // APIs
-  '/api/gdcluster/ranking/funds',
-  '/api/gdcluster/ranking/clusters',
-  '/api/gdcluster/ranking/countries',
+  '/api/clusters/ranking/funds',
+  '/api/clusters/ranking/clusters',
+  '/api/clusters/ranking/countries',
   '/api/churches/fund',
   '/api/referrals/fund',
   '/api/courses/premium/price?courseId=10',

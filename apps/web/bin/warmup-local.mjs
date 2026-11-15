@@ -34,7 +34,7 @@ const URLS = [
   '/api/donations/lensenia/balance',
   '/api/donations/lensenia/verify',
   '/api/guide?lang=en&prefix=a-relationship-with-Jesus&guide=guide1',
-  '/api/gdcluster/donations/history',
+  '/api/cluster/donations/history',
   '/api/user-transactions/191',
 ].filter((u) => u.includes(FILTER))
 

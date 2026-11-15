@@ -1,6 +1,6 @@
 {
   "host": "next",
-  "mount": { "api": "/api/gdcluster", "route": "/gdcluster" },
+  "mount": { "api": "/api/cluster", "route": "/gdcluster" },
   "provides": ["cluster-funds", "gd-donations", "gd-ranking", "gd-churches"],
   "engines": { "@learn-tg/rewards": {}, "@learn-tg/mr519": {} }
 }

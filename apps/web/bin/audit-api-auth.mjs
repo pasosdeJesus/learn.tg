@@ -134,7 +134,6 @@ const ENGINE_ADAPTERS = {
 // Rutas de motor que son públicas a propósito (sin auth), con su motivo.
 // Clave: '<MÉTODO> <motor>:<clave del registro>'.
 const ENGINE_PUBLIC_ROUTES = {
-  'GET rewards:check-crossword': 'GET no se usa: responde 400 "Expecting POST request"',
   'GET rewards:churches/fund': 'saldo público de la billetera de iglesias (bono de pastores)',
   'GET rewards:credential/[tokenId]': 'verificación pública de una credencial (SBT)',
   'GET rewards:credential/wallet/[wallet]': 'credenciales de una billetera, con el filtro de privacidad de R-#259',
@@ -145,9 +144,9 @@ const ENGINE_PUBLIC_ROUTES = {
   'GET gdcluster:donations/[slug]/balance': 'transparencia pública de una campaña',
   'GET gdcluster:donations/[slug]/movements': 'transparencia pública de una campaña',
   'GET gdcluster:donations/[slug]/transparency': 'transparencia pública de una campaña',
-  'GET gdcluster:gdcluster/ranking/clusters': 'ranking público de clústeres (solo región tipo 1)',
-  'GET gdcluster:gdcluster/ranking/countries': 'ranking público de países',
-  'GET gdcluster:gdcluster/ranking/funds': 'saldos públicos del ranking',
+  'GET gdcluster:clusters/ranking/clusters': 'ranking público de clústeres (solo región tipo 1)',
+  'GET gdcluster:clusters/ranking/countries': 'ranking público de países',
+  'GET gdcluster:clusters/ranking/funds': 'saldos públicos del ranking',
   'GET gdcluster:clusters': 'R-#299: listado público de clústeres por alias (slug, estado, iglesias y total recaudado; nunca el nombre interno, pastores ni billeteras)',
   'GET gdcluster:clusters/[slug]': 'R-#299: página pública de un clúster por alias, con el mismo criterio de privacidad',
 }
@@ -315,6 +314,8 @@ function main() {
   const publicWithAdminData = []
   // Rutas delegadas a un motor
   const engineRoutes = []
+  // Subrutas de un prefijo público (`directory/churches/...`) que exigen sesión.
+  const prefixAuthenticated = []
 
   for (const file of routeFiles) {
     if (file.includes('__tests__')) continue
@@ -331,7 +332,13 @@ function main() {
     const usesDb = hasDb(content)
     const usesAuth = hasAuth(content)
     const usesAdmin = hasAdminAuth(content)
-    const isPublicEp = isPublic(rel)
+    const declaredPublic = isPublic(rel)
+    // `PUBLIC_ENDPOINTS` compara por prefijo (`directory/churches` cubre
+    // `directory/churches/[id]/claim`), pero una subruta puede exigir sesión: si la
+    // ruta autentica (y no es sólo un dato extra de admin), manda su auth real.
+    const authWinsOverPrefix = declaredPublic && !usesAdmin && usesAuth
+    const isPublicEp = declaredPublic && !authWinsOverPrefix
+    if (authWinsOverPrefix) prefixAuthenticated.push(rel)
 
     const sensitive = usesDb || hasFileAccess(content)
     if (!sensitive) continue
@@ -372,6 +379,13 @@ function main() {
     console.log(`  ❌ ${rel} — DATABASE ACCESS WITHOUT AUTH`)
   }
 
+  if (prefixAuthenticated.length > 0) {
+    console.log('')
+    for (const rel of prefixAuthenticated) {
+      console.log(`  ℹ️  ${rel} — bajo un prefijo público de PUBLIC_ENDPOINTS pero exige sesión: se cuenta como autenticada`)
+    }
+  }
+
   // Advisory de `nombre` (no admin-only)
   if (advisories.length > 0) {
     console.log('')
@@ -385,30 +399,81 @@ function main() {
   // Rutas de motor (re-exports), clasificadas por método
   let engineFailed = 0
   let engineWarnings = 0
-  if (engineRoutes.length > 0) console.log('')
-  for (const route of engineRoutes) {
-    const id = `${route.method} ${route.engine}:${route.key}`
-    if (route.cls === 'admin') {
-      console.log(`  🔒 ${route.rel} [${route.method}] (admin-only, engine ${route.engine})`)
-    } else if (route.cls === 'user') {
-      console.log(`  ✅ ${route.rel} [${route.method}] (authenticated, engine ${route.engine})`)
-    } else if (route.cls === 'none') {
-      if (ENGINE_PUBLIC_ROUTES[id]) {
-        console.log(`  ✅ ${route.rel} [${route.method}] (public, engine ${route.engine}) — ${ENGINE_PUBLIC_ROUTES[id]}`)
+  // Un bloque por motor, y dentro de cada uno de admin a público: así el lector ve de
+  // qué motor es cada ruta sin leer la coletilla de cada línea.
+  const engineClassOrder = ['admin', 'user', 'none', 'unresolved']
+  for (const engineName of [...new Set(engineRoutes.map((route) => route.engine))].sort()) {
+    const rows = engineRoutes
+      .filter((route) => route.engine === engineName)
+      .sort((a, b) => engineClassOrder.indexOf(a.cls) - engineClassOrder.indexOf(b.cls))
+    console.log(`
+── Motor ${engineName} (${rows.length} rutas) ──`)
+    for (const route of rows) {
+      const id = `${route.method} ${route.engine}:${route.key}`
+      if (route.cls === 'admin') {
+        console.log(`  🔒 ${route.rel} [${route.method}] (admin-only)`)
+      } else if (route.cls === 'user') {
+        console.log(`  ✅ ${route.rel} [${route.method}] (authenticated)`)
+      } else if (route.cls === 'none') {
+        if (ENGINE_PUBLIC_ROUTES[id]) {
+          console.log(`  ✅ ${route.rel} [${route.method}] (public) — ${ENGINE_PUBLIC_ROUTES[id]}`)
+        } else {
+          console.log(`  ❌ ${route.rel} [${route.method}] — ENGINE HANDLER WITHOUT AUTH`)
+          engineFailed++
+          issues.push(`${route.rel} [${route.method}]`)
+        }
       } else {
-        console.log(`  ❌ ${route.rel} [${route.method}] (engine ${route.engine}) — ENGINE HANDLER WITHOUT AUTH`)
-        engineFailed++
-        issues.push(`${route.rel} [${route.method}]`)
+        console.log(`  ⚠️  ${route.rel} [${route.method}] — handler not resolved`)
+        engineWarnings++
       }
-    } else {
-      console.log(`  ⚠️  ${route.rel} [${route.method}] (engine ${route.engine}) — handler not resolved`)
-      engineWarnings++
     }
   }
 
   const passed = publics.length + authenticated.length + adminOnly.length + engineRoutes.length - engineFailed - engineWarnings
   const failed = issues.length
-  console.log(`\n${passed} passed / ${failed} failed (public: ${publics.length}, admin-only: ${adminOnly.length}, authenticated: ${authenticated.length}, engine: ${engineRoutes.length})${advisories.length ? ` — advisories nombre: ${advisories.length}` : ''}${engineWarnings ? ` — engine warnings: ${engineWarnings}` : ''}`)
+  // Desglose de las rutas de motor por clase y por motor, y total general: el total
+  // del resumen no decía si eran públicas, autenticadas o de admin.
+  const classOf = (route) =>
+    route.cls === 'admin' ? 'admin-only'
+      : route.cls === 'user' ? 'authenticated'
+        : route.cls === 'none' ? 'public' : 'unresolved'
+  const CLASSES = ['public', 'authenticated', 'admin-only', 'unresolved']
+  const countByClass = (routes) =>
+    CLASSES.reduce((acc, key) => {
+      const total = routes.filter((route) => classOf(route) === key).length
+      if (total) acc[key] = total
+      return acc
+    }, {})
+  const describe = (counts) =>
+    CLASSES.filter((key) => counts[key]).map((key) => `${key} ${counts[key]}`).join(' · ')
+
+  const engineNames = [...new Set(engineRoutes.map((route) => route.engine))].sort()
+  if (engineNames.length > 0) {
+    console.log('\nRutas de motor por clase:')
+    for (const name of engineNames) {
+      const rows = engineRoutes.filter((route) => route.engine === name)
+      console.log(`  ${name.padEnd(10)} ${String(rows.length).padStart(3)}  ${describe(countByClass(rows))}`)
+    }
+  }
+
+  const coreCounts = {
+    public: publics.length,
+    authenticated: authenticated.length,
+    'admin-only': adminOnly.length,
+  }
+  const engineCounts = countByClass(engineRoutes)
+  const totalCounts = Object.fromEntries(
+    CLASSES.map((key) => [key, (coreCounts[key] || 0) + (engineCounts[key] || 0)]).filter(([, total]) => total > 0),
+  )
+  const grandTotal = Object.values(totalCounts).reduce((sum, total) => sum + total, 0)
+
+  console.log(`
+${passed} passed / ${failed} failed — advisories nombre: ${advisories.length}${engineWarnings ? ` — engine warnings: ${engineWarnings}` : ''}`)
+  console.log(`  core    ${String(coreCounts.public + coreCounts.authenticated + coreCounts['admin-only']).padStart(3)}  ${describe(coreCounts)}`)
+  if (engineRoutes.length > 0) {
+    console.log(`  engine  ${String(engineRoutes.length).padStart(3)}  ${describe(engineCounts)}`)
+  }
+  console.log(`  total   ${String(grandTotal).padStart(3)}  ${describe(totalCounts)}`)
 
   if (failed > 0) {
     console.log('\nEndpoints needing auth:')

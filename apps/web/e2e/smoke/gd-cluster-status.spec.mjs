@@ -21,9 +21,9 @@ async function main() {
   await sleep(200)
 
   // Test 1: the public ranking answers and carries the status of each cluster.
-  console.log('── Test 1: GET /api/gdcluster/ranking/clusters ──')
+  console.log('── Test 1: GET /api/clusters/ranking/clusters ──')
   try {
-    const r = await fetch(`${SITE}/api/gdcluster/ranking/clusters`)
+    const r = await fetch(`${SITE}/api/clusters/ranking/clusters`)
     if (r.status !== 200) {
       fail(`status=${r.status}`)
     } else {
@@ -42,9 +42,9 @@ async function main() {
   await sleep(1000)
 
   // Test 2: the country ranking still answers.
-  console.log('── Test 2: GET /api/gdcluster/ranking/countries ──')
+  console.log('── Test 2: GET /api/clusters/ranking/countries ──')
   try {
-    const r = await fetch(`${SITE}/api/gdcluster/ranking/countries`)
+    const r = await fetch(`${SITE}/api/clusters/ranking/countries`)
     if (r.status === 200) {
       const data = await r.json()
       ok(`status 200 (${(data.countries || []).length} countries)`)

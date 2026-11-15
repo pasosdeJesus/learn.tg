@@ -13,8 +13,8 @@ flows in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 | Capability | Handlers | Description |
 |------------|----------|-------------|
-| Cluster funds | `gdcluster/ranking/clusters`, `gdcluster/ranking/countries`, `gdcluster/ranking/funds` (GET) | Public leaderboards of cluster/country funds with USDT/SLEARN balances |
-| GD donations | `gdcluster/donations/verify` (POST), `gdcluster/donations/history` (GET) | Verify USDT/SLEARN transfer receipt and credit the cluster/country fund; donation history |
+| Cluster funds | `clusters/ranking/clusters`, `clusters/ranking/countries`, `clusters/ranking/funds` (GET) | Public leaderboards of cluster/country funds with USDT/SLEARN balances |
+| GD donations | `cluster/donations/verify` (POST), `cluster/donations/history` (GET) | Verify USDT/SLEARN transfer receipt and credit the cluster/country fund; donation history |
 | Clusters | `cluster` (POST), `cluster/[id]` (GET, PATCH), `cluster/[id]/leave` (POST), `clusters` (GET), `clusters/[slug]` (GET) | Cluster lifecycle: pastor-only creation (type 1 countries, must own GD course, unique `name` and editable public `slug`), detail/alias-and-wallet edit, leave, and the **public** per-cluster page by slug (never the internal name) |
 | Invitations | `cluster/status`, `cluster/candidates`, `cluster/invitations` (GET), `cluster/invitation/accept`, `cluster/invitation/reject`, `cluster/invitation/wallet` (POST) | https://github.com/pasosdeJesus/learn.tg/issues/220 and R-#299: pastor cluster state, candidates from the referral graph (https://github.com/pasosdeJesus/learn.tg/issues/163), accept/reject (one re-invite after a rejection) and invitation **by wallet**, initiator only, with a uniform 422 `not_invitable` + `reason` |
 | Admin | `admin/clusters` (GET, POST), `admin/clusters/[id]` (GET, PUT, DELETE), `admin/clusters/[id]/members` (POST, DELETE) | Verifier/admin CRUD over `clustergd` / `church_clustergd` |
@@ -35,7 +35,7 @@ const gdclusterApp = createGdclusterApp({
 })
 
 export async function GET(req: Request) {
-  return gdclusterApp['gdcluster/ranking/clusters'].GET(req)
+  return gdclusterApp['clusters/ranking/clusters'].GET(req)
 }
 ```
 
@@ -52,11 +52,11 @@ export async function GET(req: Request) {
 
 | Route key | Methods |
 |-----------|---------|
-| `gdcluster/ranking/clusters` | GET |
-| `gdcluster/ranking/countries` | GET |
-| `gdcluster/ranking/funds` | GET |
-| `gdcluster/donations/verify` | POST |
-| `gdcluster/donations/history` | GET |
+| `clusters/ranking/clusters` | GET |
+| `clusters/ranking/countries` | GET |
+| `clusters/ranking/funds` | GET |
+| `cluster/donations/verify` | POST |
+| `cluster/donations/history` | GET |
 | `cluster` | POST |
 | `cluster/[id]` | GET, PATCH |
 | `cluster/[id]/leave` | POST |

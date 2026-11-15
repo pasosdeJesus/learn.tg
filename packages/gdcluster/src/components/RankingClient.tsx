@@ -87,9 +87,9 @@ export function RankingClient({ lang, deps }: { lang: string; deps: RankingClien
     const auth = deps.adminAuthParams()
     try {
       const [cRes, coRes, fRes] = await Promise.all([
-        fetch(`/api/gdcluster/ranking/clusters?${auth}`),
-        fetch(`/api/gdcluster/ranking/countries?${auth}`),
-        fetch(`/api/gdcluster/ranking/funds?${auth}`),
+        fetch(`/api/clusters/ranking/clusters?${auth}`),
+        fetch(`/api/clusters/ranking/countries?${auth}`),
+        fetch(`/api/clusters/ranking/funds?${auth}`),
       ])
       if (cRes.ok) setClusters((await cRes.json()).clusters || [])
       if (coRes.ok) setCountries((await coRes.json()).countries || [])
