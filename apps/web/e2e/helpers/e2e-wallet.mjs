@@ -16,6 +16,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { privateKeyToAccount } from 'viem/accounts'
+import { listWallets } from './e2e-wallets-registry.mjs'
 
 const ENV_PATHS = [
   path.join(process.cwd(), '..', '.env'),
@@ -92,7 +93,18 @@ export function loadWalletCredentials({ variable = 'PRIVATE_KEY' } = {}) {
   const chosen = candidates.find((entry) =>
     wanted ? entry.address.toLowerCase() === wanted : entry.variable === name,
   )
-  return chosen || null
+  if (chosen) return chosen
+  // Una dirección también puede estar sólo en el registro local de billeteras creadas
+  // por los specs (`.e2e-wallets.local.json`): así `E2E_WALLET=0x…` reutiliza, por
+  // ejemplo, la billetera que acaba de comprar el curso GD.
+  if (wanted) {
+    const row = listWallets().find((entry) => String(entry.address).toLowerCase() === wanted)
+    if (row?.privateKey) {
+      const address = privateKeyToAccount(row.privateKey).address
+      return { variable: 'registro local', pk: row.privateKey, address, addr: address }
+    }
+  }
+  return null
 }
 
 /**

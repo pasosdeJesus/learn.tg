@@ -77,22 +77,39 @@ export async function ensurePastorFixture({
     log.push(`iglesia #${churchId}`)
   }
 
-  if (profile.body?.church_relationship !== 'pastor') {
-    await admin(`/api/admin/user/${userId}`, {
+  const promote = async (targetChurchId) => {
+    const res = await admin(`/api/admin/user/${userId}`, {
       method: 'PATCH',
-      body: JSON.stringify({ church_relationship: 'pastor' }),
+      body: JSON.stringify({ church_id: targetChurchId, church_relationship: 'pastor' }),
     })
+    return res
   }
-  if (Number(profile.body?.church_id) !== Number(churchId)) {
-    const assigned = await admin(`/api/admin/user/${userId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ church_id: churchId }),
+
+  let promoted = await promote(churchId)
+  let current = await apiOn(pastorPage, `/api/profile?walletAddress=${pastor.address}`)
+  // Una iglesia ya tiene pastor principal (409) o el rol no quedó: se crea una iglesia
+  // sólo para esta corrida. Antes se seguía adelante y el pastor fallaba después con un
+  // 403 "Only pastors can create clusters" que no decía nada (medido 2026-11-14).
+  if (current.body?.church_relationship !== 'pastor') {
+    const name = `${churchName || 'E2E'} ${pastor.address.slice(2, 8)} ${Date.now().toString(36)}`
+    const created = await admin('/api/admin/churches', {
+      method: 'POST',
+      body: JSON.stringify({ name, country_id: countryId, city_name: 'Freetown' }),
     })
-    if (assigned.status !== 200) {
-      throw new Error(`no se pudo asignar la iglesia (${assigned.status} ${JSON.stringify(assigned.body)})`)
+    churchId = created.body?.church?.id
+    if (!churchId) {
+      throw new Error(`no se pudo crear la iglesia para el pastor (${created.status} ${JSON.stringify(created.body)})`)
     }
-    log.push('rol pastor')
+    log.push(`iglesia nueva #${churchId}`)
+    promoted = await promote(churchId)
+    current = await apiOn(pastorPage, `/api/profile?walletAddress=${pastor.address}`)
   }
+  if (current.body?.church_relationship !== 'pastor') {
+    throw new Error(
+      `el perfil no quedó como pastor principal (rol=${current.body?.church_relationship}, iglesia=${current.body?.church_id}, PATCH=${promoted.status} ${JSON.stringify(promoted.body)})`,
+    )
+  }
+  log.push('rol pastor')
 
   // El curso GD se compra **por la interfaz** con `premium-course-checkout`
   // (la app calcula el destinatario; no hace falta conocer la billetera que cobra).
@@ -100,5 +117,5 @@ export async function ensurePastorFixture({
   const owns = (mine.body?.courses || []).some((row) => Number(row.course_id) === GD_COURSE_ID)
   log.push(owns ? 'curso GD ya pagado' : 'curso GD pendiente (lo compra premium-course-checkout)')
 
-  return { userId, churchId, steps: log }
+  return { userId, churchId, ownsGdCourse: owns, steps: log }
 }

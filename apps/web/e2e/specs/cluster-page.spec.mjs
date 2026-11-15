@@ -183,6 +183,14 @@ async function main() {
     return
   }
 
+  // Sin el curso pagado no se puede crear el clúster; se avisa en vez de fallar con un
+  // 403 genérico (el curso lo compra `premium-course-checkout`).
+  if (fixture && !fixture.ownsGdCourse) {
+    console.log('  [SKIP] la billetera no tiene el curso GD: corre antes FUND_FRESH=1 make test-e2e-spec SPEC=premium-course-checkout')
+    await browser.close()
+    process.exit(0)
+  }
+
   const status = await api(`/api/cluster/status?${qa}`)
   let clusterId = null
   if (status.body?.hasCluster) {
@@ -204,100 +212,90 @@ async function main() {
     else fail(`POST /api/cluster → ${created.status} ${JSON.stringify(created.body).slice(0, 160)}`)
   }
   if (!clusterId) {
-    summary()
     await browser.close()
-    return
+    const failures = summary(t0)
+    process.exit(failures > 0 ? 1 : 0)
   }
 
-  const clusterUrl = `${base}/${LANG}/cluster/${clusterId}`
-  const loadClusterPage = async () => {
+  // ── 2. Página del clúster en formación ─────────────────────────────
+  // R-#299: hay una sola página privada, /{lang}/cluster, y mientras el clúster se
+  // forma muestra sólo nombre/alias, iglesias, invitaciones, balances/donaciones e
+  // historial; presupuesto, director, aprobación y presentación aparecen con 3 iglesias.
+  console.log('\n── 2. Página del clúster (formación) ──')
+  const clusterUrl = `${base}/${LANG}/cluster`
+  const loadPage = async () => {
     await page.goto(clusterUrl, { waitUntil: 'domcontentloaded' })
     await page.waitForFunction(
-      () => (document.body?.innerText || '').includes('Cluster wallet') ||
-        (document.body?.innerText || '').includes('Billetera del clúster'),
+      () => /Member Churches|Iglesias Miembros|Cluster fund balance|Balance del fondo del clúster/
+        .test(document.body?.innerText || ''),
       { timeout },
-    )
-    await page.waitForFunction(
-      () => document.querySelectorAll('input[type="number"]').length >= 3 ||
-        (document.body?.innerText || '').includes('Connection Error'),
-      { timeout: 45000 },
     ).catch(() => {})
-    await new Promise((r) => setTimeout(r, 500))
+    await new Promise((r) => setTimeout(r, 800))
     return page.evaluate(() => document.body.innerText.replace(/\s+/g, ' '))
   }
 
-  // ── 2. Página como iniciador ───────────────────────────────────────
-  console.log('\n── 2. Página del clúster (iniciador) ──')
-  let text = await loadClusterPage()
-  if (!/Connection Error/.test(text)) ok('la página no muestra "Connection Error"')
-  else fail('la página muestra "Connection Error"')
+  let text = await loadPage()
+  if (/Connection Error/.test(text)) fail('la página muestra "Connection Error"')
+  else ok('la página no muestra "Connection Error"')
 
-  const presentation = await api(`/api/cluster/${clusterId}/gd-presentation?${qa}`)
-  if (presentation.status === 200 && presentation.body?.isInitiator) ok('GET gd-presentation → 200 (isInitiator)')
-  else fail(`GET gd-presentation → ${presentation.status}`)
-  const before = presentation.body?.missing_data || []
+  const shows = (en, es) => text.includes(en) || text.includes(es)
+  for (const [en, es] of [
+    ['Member Churches', 'Iglesias Miembros'],
+    ['Invitations', 'Invitaciones'],
+    ['Cluster fund balance', 'Balance del fondo del clúster'],
+    ['Country fund balance', 'Balance del fondo del país'],
+    ['Donations to the cluster fund', 'Donaciones al fondo del clúster'],
+    ['History', 'Historial'],
+  ]) {
+    if (shows(en, es)) ok(`tarjeta presente: ${en}`)
+    else fail(`falta la tarjeta ${en} | página: ${text.slice(0, 240)}`)
+  }
+  for (const [en, es] of [
+    ['Fourth year budget', 'Presupuesto del cuarto año'],
+    ['Program Director', 'Director del programa'],
+    ['Pastors approval', 'Aprobación de los pastores'],
+    ['Present to Global Disciples', 'Presentar el clúster a Global Disciples'],
+  ]) {
+    if (shows(en, es)) fail(`un clúster en formación no debería mostrar ${en}`)
+    else ok(`oculta mientras se forma: ${en}`)
+  }
+  if (/members in learn\.tg|miembros en learn\.tg/.test(text)) ok('la iglesia muestra sus miembros en learn.tg')
+  else fail('la fila de la iglesia no muestra el número de miembros')
+  if (/referrals|referidos/.test(text)) ok('la fila de la iglesia muestra los referidos del pastor')
+  else fail('la fila de la iglesia no muestra los referidos')
 
-  const missingLabel = LANG === 'es'
-    ? 'Antes de solicitar la presentación debes completar:'
-    : 'Before requesting the presentation you must complete:'
-  if (text.includes(missingLabel)) ok('bloque de datos faltantes visible')
-  else fail(`no aparece el bloque de datos faltantes | página: ${text.slice(0, 160)}`)
+  // ── 3. Alias público ───────────────────────────────────────────────
+  console.log('\n── 3. Alias público ──')
+  const alias = `e2e-${Date.now().toString(36)}`
+  const aliasRes = await api(`/api/cluster/${clusterId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ walletAddress: wallet, slug: alias }),
+  })
+  if (aliasRes.status === 200) ok(`PATCH alias → 200 (${alias})`)
+  else fail(`PATCH alias → ${aliasRes.status} ${JSON.stringify(aliasRes.body).slice(0, 160)}`)
+  text = await loadPage()
+  if (text.includes(alias)) ok('la página muestra el alias nuevo')
+  else fail('la página no muestra el alias nuevo')
 
-  const walletHint = LANG === 'es' ? 'no está configurada' : 'Not configured'
-  if (presentation.body?.wallet) ok('la billetera del clúster ya estaba configurada')
-  else if (text.includes(walletHint)) ok('la billetera del clúster aparece sin configurar')
-  else fail('la billetera no aparece como "sin configurar"')
-
-  // ── 3. Presupuesto y oferta del director ───────────────────────────
-  console.log('\n── 3. Presupuesto y oferta del director ──')
-  // Por la UI: se escriben los tres campos y se pulsan los botones de guardar.
-  // Si el panel aún no está desplegado, se cae a la API y se avisa.
-  const filled = await fillPanelNumbers(page, [400, 180, 40])
-  if (filled) {
-    if (await clickSave(page, 0)) ok('guardar presupuesto (botón)')
-    else fail('no se encontró el botón de guardar del presupuesto')
-    await new Promise((r) => setTimeout(r, 2500))
-    // El panel recarga tras guardar: se repiten los valores del director antes de su botón.
-    await fillPanelNumbers(page, [400, 180, 40])
-    if (await clickSave(page, 1)) ok('guardar oferta del director (botón)')
-    else fail('no se encontró el botón de guardar del director')
-    await new Promise((r) => setTimeout(r, 2500))
+  const rename = await api(`/api/cluster/${clusterId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ walletAddress: wallet, name: 'Otro nombre' }),
+  })
+  if (rename.status === 400 && rename.body?.code === 'name_not_editable') {
+    ok('el nombre interno no se edita desde aquí (400 name_not_editable)')
   } else {
-    console.log('  [!] el panel no está en la página: se usan los endpoints (pendiente el despliegue)')
-    const budget = await api(`/api/cluster/${clusterId}/budget`, {
-      method: 'PUT',
-      body: JSON.stringify({ walletAddress: wallet, fourthYearBudget: 400 }),
-    })
-    if (budget.status === 200) ok('PUT budget → 200')
-    else fail(`PUT budget → ${budget.status} ${JSON.stringify(budget.body).slice(0, 120)}`)
-
-    const director = await api(`/api/cluster/${clusterId}/director`, {
-      method: 'PUT',
-      body: JSON.stringify({ walletAddress: wallet, directorFirstYearPay: 180, directorFirstYearHours: 40 }),
-    })
-    if (director.status === 200) ok('PUT director → 200')
-    else fail(`PUT director → ${director.status} ${JSON.stringify(director.body).slice(0, 120)}`)
+    fail(`PATCH name → ${rename.status} ${JSON.stringify(rename.body).slice(0, 160)}`)
   }
 
-  const after = (await api(`/api/cluster/${clusterId}/gd-presentation?${qa}`)).body?.missing_data || []
-  if (!after.includes('budget_total') && !after.includes('director_pay') && !after.includes('director_hours')) {
-    ok('los tres datos numéricos ya no faltan')
-  } else {
-    fail(`siguen faltando: ${after.join(', ')} (antes: ${before.join(', ')})`)
-  }
-  if (after.includes('budget_pdf') && after.includes('director_offer_pdf')) ok('los dos PDF siguen pendientes')
+  const invalidAlias = await api(`/api/cluster/${clusterId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ walletAddress: wallet, slug: 'mal alias' }),
+  })
+  if (invalidAlias.status === 400 && invalidAlias.body?.code === 'slug_invalid') ok('alias inválido → 400 slug_invalid')
+  else fail(`alias inválido → ${invalidAlias.status}`)
 
-  await loadClusterPage()
-  const numbers = await page.evaluate(() =>
-    Array.from(document.querySelectorAll('input[type="number"]')).map((input) => input.value))
-  if (numbers[0] === '400' && numbers[1] === '180' && numbers[2] === '40') {
-    ok(`la página muestra los valores guardados (${numbers.join(' / ')})`)
-  } else {
-    fail(`la página muestra otros valores: ${JSON.stringify(numbers)}`)
-  }
-
-  // ── 4. Billetera del clúster ───────────────────────────────────────
-  console.log('\n── 4. Billetera del clúster ──')
+  // ── 4. Billetera del clúster (validación) ──────────────────────────
+  console.log('\n── 4. Billetera del clúster (validación) ──')
   const invalid = await api(`/api/cluster/${clusterId}`, {
     method: 'PATCH',
     body: JSON.stringify({ walletAddress: wallet, clusterWallet: 'no-es-una-direccion' }),
@@ -319,102 +317,31 @@ async function main() {
   if (foreign.status === 400) ok('billetera no registrada → 400')
   else fail(`billetera no registrada → ${foreign.status}`)
 
-  const selfWallet = await api(`/api/cluster/${clusterId}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ walletAddress: wallet, clusterWallet: wallet }),
-  })
-  const selfBody = JSON.stringify(selfWallet.body)
-  if (selfWallet.status === 200 || /platform or to the contract/.test(selfBody)) {
-    ok(`la billetera del iniciador → ${selfWallet.status}`)
-  } else {
-    fail(`billetera del iniciador → ${selfWallet.status} ${selfBody.slice(0, 120)}`)
-  }
+  // ── 5. Invitaciones ────────────────────────────────────────────────
+  console.log('\n── 5. Invitaciones ──')
+  const candidates = await api(`/api/cluster/candidates?${qa}`)
+  if (candidates.status === 200) ok(`GET candidates → 200 (${candidates.body?.candidates?.length ?? 0})`)
+  else fail(`GET candidates → ${candidates.status}`)
 
-  let secondWallet = null
-  try {
-    secondWallet = await ensureSecondWallet(page, base, wallet, process.env.CHAIN_ID)
-    ok(`segunda billetera de la cuenta: ${secondWallet.slice(0, 10)}...`)
-  } catch (error) {
-    fail(`no se pudo enlazar una segunda billetera: ${error.message}`)
-  }
-  if (secondWallet) {
-    const own = await api(`/api/cluster/${clusterId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ walletAddress: wallet, clusterWallet: secondWallet }),
-    })
-    if (own.status === 200) ok('billetera registrada de la cuenta → 200')
-    else fail(`billetera registrada → ${own.status} ${JSON.stringify(own.body).slice(0, 160)}`)
-  }
-
-  const missingWallet = (await api(`/api/cluster/${clusterId}/gd-presentation?${qa}`)).body?.missing || []
-  if (!missingWallet.includes('cluster_wallet')) ok('la billetera ya no aparece como faltante')
-  else fail('la billetera sigue faltando')
-
-  text = await loadClusterPage()
-  const shownWallet = secondWallet || wallet
-  if (text.toLowerCase().includes(shownWallet.toLowerCase())) ok('la página muestra la billetera configurada')
-  else fail('la página no muestra la billetera guardada')
-
-  // ── 5. Aprobación de pastores ──────────────────────────────────────
-  console.log('\n── 5. Aprobación de pastores ──')
-  await loadClusterPage()
-  if (await clickApprove(page)) {
-    ok('aprobación pulsada en la interfaz')
-    await new Promise((r) => setTimeout(r, 2000))
-  } else {
-    console.log('  [!] botón de aprobación ausente: se usa el endpoint (pendiente el despliegue)')
-    const approval = await api(`/api/cluster/${clusterId}/approval`, {
-      method: 'POST',
-      body: JSON.stringify({ walletAddress: wallet }),
-    })
-    if (approval.status === 200) ok('POST approval → 200')
-    else fail(`POST approval → ${approval.status} ${JSON.stringify(approval.body).slice(0, 160)}`)
-  }
-
-  const ready = (await api(`/api/cluster/${clusterId}/gd-presentation?${qa}`)).body || {}
-  if (ready.approvals?.approved >= 1 && !(ready.missing || []).includes('approvals')) {
-    ok(`aprobaciones ${ready.approvals.approved}/${ready.approvals.pastors}`)
-  } else {
-    fail(`aprobaciones inesperadas: ${JSON.stringify(ready.approvals)}`)
-  }
-
-  text = await loadClusterPage()
-  const approvedLabel = LANG === 'es' ? 'Todos los pastores aprobaron' : 'All the pastors approved'
-  if (text.includes(approvedLabel)) ok('la página muestra la aprobación completa')
-  else fail('la página no muestra la aprobación completa')
-
-  // ── 6. Solicitud bloqueada mientras falten condiciones ─────────────
-  console.log('\n── 6. Solicitud bloqueada ──')
-  const request = await api(`/api/cluster/${clusterId}/gd-presentation`, {
+  // La respuesta es uniforme a propósito (no deja enumerar cuentas): se comprueba la
+  // forma, no el motivo exacto (la iglesia del fixture puede no estar verificada aún).
+  const self = await api('/api/cluster/invitation/wallet', {
     method: 'POST',
-    body: JSON.stringify({ walletAddress: wallet }),
+    body: JSON.stringify({ walletAddress: wallet, invitedWallet: wallet }),
   })
-  if (request.status >= 400) ok(`POST gd-presentation → ${request.status} (faltan condiciones)`)
-  else fail(`POST gd-presentation → ${request.status} (se esperaba rechazo)`)
-  if ((ready.missing || []).some((key) => ['cluster_active', 'cluster_members'].includes(key))) {
-    ok(`condiciones pendientes: ${ready.missing.join(', ')}`)
+  if (self.status === 422 && self.body?.code === 'not_invitable' && self.body?.reason) {
+    ok(`invitación no procedente → 422 not_invitable (${self.body.reason})`)
+  } else {
+    fail(`invitación no procedente → ${self.status} ${JSON.stringify(self.body).slice(0, 160)}`)
   }
 
-  // ── 7. Renombrar ───────────────────────────────────────────────────
-  console.log('\n── 7. Renombrar ──')
-  const newName = `E2E Cluster ${Date.now().toString(36)}`
-  const renamed = await api(`/api/cluster/${clusterId}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ walletAddress: wallet, name: newName }),
-  })
-  if (renamed.status === 200) ok('PATCH nombre → 200')
-  else fail(`PATCH nombre → ${renamed.status}`)
-  text = await loadClusterPage()
-  if (text.includes(newName)) ok('la página muestra el nombre nuevo')
-  else fail('la página no muestra el nombre nuevo')
+  // ── 6. Fuera de alcance ────────────────────────────────────────────
+  console.log('\n── 6. Fuera de alcance ──')
+  skip('presupuesto, director, aprobación y presentación: los cubre cluster-ready con 3 pastores')
+  skip('estado `sent` y `answered` con liberación del fondo: necesitan el contrato y la firma del operador')
 
-  // ── 8. Fuera de alcance ────────────────────────────────────────────
-  console.log('\n── 8. Fuera de alcance ──')
-  skip('estado `sent`: exige los 3 pastores listos (curso completo, invitaciones, puntaje > 90) y escribe en el contrato')
-  skip('estado `answered` y liberación del fondo: exige el fondo del país en ClusterFundsV2 y la firma del operador')
-
-  // ── 9. Limpieza ────────────────────────────────────────────────────
-  console.log('\n── 9. Limpieza ──')
+  // ── 7. Limpieza ────────────────────────────────────────────────────
+  console.log('\n── 7. Limpieza ──')
   const left = await api(`/api/cluster/${clusterId}/leave`, {
     method: 'POST',
     body: JSON.stringify({ walletAddress: wallet }),
@@ -429,7 +356,8 @@ async function main() {
   await browser.close()
   const seconds = ((performance.now() - t0) / 1000).toFixed(1)
   console.log(`\nDuración: ${seconds}s`)
-  summary()
+  const failures = summary(t0)
+  process.exit(failures > 0 ? 1 : 0)
 }
 
 main().catch((error) => {
