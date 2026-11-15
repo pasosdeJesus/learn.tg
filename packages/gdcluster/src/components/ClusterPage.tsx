@@ -810,9 +810,7 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
       {/* 3. Invitaciones: los dos caminos (referidos y billetera). */}
       {invitationsCard}
 
-      {complete && (
-        <>
-          {/* 4. Balances de los fondos y donaciones: lo que el clúster ha levantado. */}
+      {/* 4. Balances de los fondos y donaciones: lo que el clúster ha levantado. */}
       <section className={card}>
         <h2 className={cardTitle}>{t('clusterFundBalance')}</h2>
         {cluster.funds?.cluster ? (
@@ -847,6 +845,8 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
         </p>
       </section>
 
+      {complete && (
+        <>
       {/* 5. Billetera del clúster. */}
           <section className={card}>
             <h2 className={cardTitle}>{t('clusterWallet')}</h2>

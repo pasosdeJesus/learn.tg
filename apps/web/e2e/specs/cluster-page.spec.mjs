@@ -317,6 +317,22 @@ async function main() {
   if (foreign.status === 400) ok('billetera no registrada → 400')
   else fail(`billetera no registrada → ${foreign.status}`)
 
+  // ── 4b. Presupuesto del cuarto año (API) ───────────────────────────
+  // Verifica el renombre `first_year_budget` → `fourth_year_budget` en el motor y en
+  // la base del sitio (la migración tiene que estar aplicada).
+  console.log('\n── 4b. Presupuesto del cuarto año ──')
+  const budget = await api(`/api/cluster/${clusterId}/budget`, {
+    method: 'PUT',
+    body: JSON.stringify({ walletAddress: wallet, fourthYearBudget: 400 }),
+  })
+  if (budget.status === 200) ok('PUT budget (fourthYearBudget) → 200')
+  else fail(`PUT budget → ${budget.status} ${JSON.stringify(budget.body).slice(0, 160)}`)
+
+  const withBudget = await api(`/api/cluster/${clusterId}/gd-presentation?${qa}`)
+  const savedBudget = withBudget.body?.request?.fourth_year_budget
+  if (Number(savedBudget) === 400) ok(`la presentación devuelve fourth_year_budget=${savedBudget}`)
+  else fail(`fourth_year_budget inesperado (${JSON.stringify(savedBudget)}, ${withBudget.status})`)
+
   // ── 5. Invitaciones ────────────────────────────────────────────────
   console.log('\n── 5. Invitaciones ──')
   const candidates = await api(`/api/cluster/candidates?${qa}`)
