@@ -105,6 +105,9 @@ node bin/mmd2svg.mjs --scan ../../resources --out public/img/diagrams --theme ne
   a failure exits non-zero and names the `guide:line`.
 - `apps/web/lib/__tests__/guides-consistency.test.ts` fails when a diagram has no SVG generated or
   no alt text, so a forgotten scan is caught before the commit.
+- `make all` and `make prod` run it (target `make diagrams`, after `pnpm i`): with nothing new it
+  costs ~0.3 s and the renderer is not even imported, so a diagram added to a guide always reaches
+  the build with its SVG.
 - A standalone `.mmd` still works (`node bin/mmd2svg.mjs diagrama.mmd salida.svg`), for diagrams
   outside a guide.
 

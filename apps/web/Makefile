@@ -25,6 +25,14 @@ db-connections-check:
 wait-site:
 	@node bin/wait-site $${SITE_URL:+--url $$SITE_URL} $${EXPECT_CHANGE:+--expect-build-change} $${TIMEOUT:+--timeout $$TIMEOUT}
 
+# Diagramas de las guías (doc/guide-writing.md § Diagrams, lib/remarkMermaid.mjs):
+# los bloques ```mermaid de `resources/` se renderizan a SVG en public/img/diagrams.
+# Idempotente y barato (0.3 s sin cambios): sólo renderiza lo que falta y borra los
+# huérfanos, así que puede correr en el build. El renderizador sólo se carga si hay
+# algo que generar (necesita las dependencias de desarrollo).
+diagrams:
+	node bin/mmd2svg.mjs --scan ../../resources --out public/img/diagrams --theme neutral
+
 # Motores (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): consumidos vía dist/ (exports map); dist/ no está en
 # git. Compilar antes del build — un checkout fresco no resuelve
 # @learn-tg/{rewards,gdcluster} sin esto. Orden: rewards antes que gdcluster.
@@ -90,7 +98,7 @@ all: build-guard engines-assets pwa-clean
 	# enlace en `node_modules` tras instalar (miembro del workspace
 	# `packages/generated/msip`). Compilar antes falla con TS2307.
 	(cd ../.. && pnpm i)
-	$(MAKE) engines-dist
+	$(MAKE) engines-dist diagrams
 	$(MAKE) next-patch-check swc-wasm
 	# Máquina real: 16G RAM + swap, otras apps. 15 workers × heap grande = OOM.
 	# 8 workers × 2048 MB (webpack.parallelism en next.config.ts, https://gitlab.com/pasosdeJesus/m/-/work_items/35 gate).
@@ -211,7 +219,7 @@ dev:
 
 prod: build-guard engines-assets pwa-clean
 	(cd ../.. && pnpm i)
-	$(MAKE) engines-dist next-patch-check swc-wasm
+	$(MAKE) engines-dist diagrams next-patch-check swc-wasm
 	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 sh bin/build
 	./bin/start > prod.log 2>&1 &
 

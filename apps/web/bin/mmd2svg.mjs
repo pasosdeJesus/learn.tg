@@ -75,6 +75,22 @@ async function renderFile(renderMermaid, inputPath, outputPath, theme) {
   )
 }
 
+function lazyRenderer() {
+  let renderer = null
+  return async () => {
+    if (renderer) return renderer
+    try {
+      renderer = (await import('@speajus/mermaid-to-svg')).renderMermaid
+    } catch (error) {
+      throw new Error(
+        'no se pudo cargar @speajus/mermaid-to-svg (dependencia de desarrollo): ' +
+          `corre \`pnpm i\` en la raíz del workspace (${error instanceof Error ? error.message : String(error)})`,
+      )
+    }
+    return renderer
+  }
+}
+
 async function markdownFiles(dir) {
   const found = []
   const entries = await readdir(dir, { withFileTypes: true })
@@ -104,7 +120,7 @@ async function exists(path) {
  * esas guías usan hoy (el nombre es el hash del diagrama, así que un diagrama
  * editado produce otro archivo y el anterior queda huérfano: se borra).
  */
-async function scanMarkdown(renderMermaid, rootDir, outDir, theme, force) {
+async function scanMarkdown(loadRenderer, rootDir, outDir, theme, force) {
   const files = await markdownFiles(rootDir)
   const written = new Set()
   let rendered = 0
@@ -123,6 +139,9 @@ async function scanMarkdown(renderMermaid, rootDir, outDir, theme, force) {
       }
       const started = Date.now()
       try {
+        // El renderizador se carga sólo si hay algo que generar: así este paso
+        // corre en el build sin arrastrar `mermaid`/`jsdom` cuando no hace falta.
+        const renderMermaid = await loadRenderer()
         const { svg, diagramType } = await renderMermaid(diagram.source, { theme })
         if (typeof svg !== 'string' || !svg.startsWith('<svg')) {
           throw new Error('el renderizador no devolvió un SVG')
@@ -176,9 +195,8 @@ async function main() {
       console.error('--scan necesita --out <carpeta> con la ruta pública de los SVG.')
       process.exit(2)
     }
-    const { renderMermaid } = await import('@speajus/mermaid-to-svg')
     await scanMarkdown(
-      renderMermaid,
+      lazyRenderer(),
       resolve(options.scan),
       resolve(options.out),
       options.theme,
