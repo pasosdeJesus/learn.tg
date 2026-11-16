@@ -134,13 +134,19 @@ search box (name or alias) and two filters: status and country.
 of GD purchases and guide scholarships is routed to) is configured by the **cluster
 initiator** on the cluster page (`/{lang}/cluster`, the single private page since R-#299),
 which recommends a multisig wallet shared by the cluster's pastors. The verifier can correct it
-in the church modal (*Cluster wallet*) while the cluster has **not** requested the presentation.
+in the church modal (*Cluster wallet*) **while the cluster is `forming`**; from the moment the
+pastors approve it (`wallet_approved`) the API answers `409 gd_fields_locked` to the initiator and
+to the verifier, and the church modal disables the field. A real emergency (a compromised wallet)
+is solved by support, editing the database directly — never from the panel.
 
-**Once the presentation is requested, the wallet is fixed for everybody.** From `requested`
-(and through `under_review`, `approved`, `sent` and `answered`, which is terminal) the API answers
-`409 gd_fields_locked` to the initiator and to the verifier, and the church modal disables the
-field. A real emergency (a wallet compromised between the presentation and the release) is solved
-by support, editing the database directly — never from the panel.
+**The pastors approve the wallet, and that opens the fund.** The three principal pastors approve
+it in the *Cluster wallet* card (phase `wallet` of `GET|POST /api/cluster/[id]/approval`); with the
+third approval the cluster moves to `wallet_approved`, the wallet is fixed and the cluster fund
+starts existing — before that the 10% goes to the country fund and the Donate button does not
+appear. Then the initiator uploads the fourth-year budget (`waiting_for_budget`) and the director's
+offer (`waiting_for_pd_job_offer`), and the pastors approve the five data (phase `data`): with the
+third approval the cluster becomes `requested`, which **is** the request to pdJ. The membership is
+frozen from `wallet_approved` (`409 cluster_membership_locked`).
 
 **Changing it with funds in it asks first.** The `ClusterFundsV2` fund is indexed by
 the wallet address, so moving the wallet does not move the money: the old fund stays in

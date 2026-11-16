@@ -1889,7 +1889,9 @@ CREATE TABLE public.cluster_gd_approval (
     clustergd_id integer NOT NULL,
     usuario_id integer NOT NULL,
     data_hash character varying(64) NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    phase character varying(10) NOT NULL,
+    CONSTRAINT cluster_gd_approval_phase_check CHECK (((phase)::text = ANY ((ARRAY['wallet'::character varying, 'data'::character varying])::text[])))
 );
 
 
@@ -1953,7 +1955,7 @@ CREATE TABLE public.clustergd (
     gd_response_at timestamp with time zone,
     gd_response_by integer,
     gd_contact_email text,
-    gd_status character varying(20),
+    gd_status character varying(20) DEFAULT 'forming'::character varying NOT NULL,
     gd_reviewed_at timestamp with time zone,
     gd_returned_at timestamp with time zone,
     gd_approved_at timestamp with time zone,
@@ -1971,7 +1973,7 @@ CREATE TABLE public.clustergd (
     fund_released_amount numeric(14,2),
     fund_released_slearn numeric(14,2),
     slug character varying(120) NOT NULL,
-    CONSTRAINT clustergd_gd_status_check CHECK (((gd_status IS NULL) OR ((gd_status)::text = ANY ((ARRAY['requested'::character varying, 'under_review'::character varying, 'returned'::character varying, 'approved'::character varying, 'sent'::character varying, 'answered'::character varying, 'cancelled'::character varying])::text[]))))
+    CONSTRAINT clustergd_gd_status_check CHECK (((gd_status)::text = ANY ((ARRAY['forming'::character varying, 'wallet_approved'::character varying, 'waiting_for_budget'::character varying, 'waiting_for_pd_job_offer'::character varying, 'requested'::character varying, 'under_review'::character varying, 'returned'::character varying, 'sent'::character varying, 'answered'::character varying, 'cancelled'::character varying])::text[])))
 );
 
 
@@ -6776,7 +6778,7 @@ ALTER TABLE ONLY public.churchreputation
 --
 
 ALTER TABLE ONLY public.cluster_gd_approval
-    ADD CONSTRAINT cluster_gd_approval_pkey PRIMARY KEY (clustergd_id, usuario_id);
+    ADD CONSTRAINT cluster_gd_approval_pkey PRIMARY KEY (clustergd_id, usuario_id, phase);
 
 
 --

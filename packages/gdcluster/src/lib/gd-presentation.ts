@@ -1,6 +1,10 @@
 import { sql } from 'kysely'
 import { getClusterMembers } from './gd-utils.js'
-import { getClusterApprovals, presentationDataHash, type ClusterApprovals } from './cluster-approvals.js'
+import {
+  getClusterApprovalSummary,
+  type ClusterApprovalSummary,
+  type ClusterApprovals,
+} from './cluster-approvals.js'
 
 // Condiciones para que el iniciador pida presentar el clúster a Global Disciples
 // (R-#161, decisión del operador 2026-10-27):
@@ -16,15 +20,22 @@ export const GD_COURSE_IDS = [10, 11]
 export const MIN_PROFILE_SCORE = 90 // estrictamente mayor: > 90
 export const MIN_CHURCHES = 3
 
-// Estados de la presentación (https://github.com/pasosdeJesus/learn.tg/issues/161):
-// el iniciador solicita (`requested`), pdJ revisa (`under_review`), devuelve con
-// sugerencias (`returned`), aprueba (`approved`), envía a GD (`sent`) y registra la
-// respuesta (`answered`). `cancelled` es la retirada del iniciador antes de la revisión.
+// Estados de la presentación (https://github.com/pasosdeJesus/learn.tg/issues/161,
+// REQ/161 §4.7): el clúster se forma (`forming`), los pastores aprueban la billetera
+// (`wallet_approved`), el iniciador sube el presupuesto (`waiting_for_budget`) y la
+// oferta del director (`waiting_for_pd_job_offer`), los pastores aprueban los datos y
+// con la tercera aprobación se pide la presentación (`requested`), pdJ revisa
+// (`under_review`), devuelve (`returned`), envía (`sent`) y registra la respuesta
+// (`answered`). `cancelled` es la retirada del iniciador antes de la revisión.
+// `approved` desapareció: revisar y enviar son dos pasos de pdJ.
 export const GD_PRESENTATION_STATUSES = [
+  'forming',
+  'wallet_approved',
+  'waiting_for_budget',
+  'waiting_for_pd_job_offer',
   'requested',
   'under_review',
   'returned',
-  'approved',
   'sent',
   'answered',
   'cancelled',
@@ -37,16 +48,53 @@ export type GdPresentationStatus = (typeof GD_PRESENTATION_STATUSES)[number]
 const LOCKING_STATUSES: GdPresentationStatus[] = [
   'requested',
   'under_review',
-  'approved',
   'sent',
   'answered',
 ]
 
+// Estados en que el fondo del clúster existe: desde que los pastores aprueban la
+// billetera hasta que GD responde y el fondo se libera (`fund_released_at`). Antes y
+// después, el 10 % va al fondo del país y no se aceptan donaciones al clúster.
+// `answered` queda fuera a propósito: aunque una liberación haya fallado y quede
+// dinero en el contrato, el clúster ya salió del proceso.
+export const GD_FUND_OPEN_STATUSES: GdPresentationStatus[] = [
+  'wallet_approved',
+  'waiting_for_budget',
+  'waiting_for_pd_job_offer',
+  'requested',
+  'under_review',
+  'returned',
+  'sent',
+]
+
+export function clusterFundOpen(
+  status: string | null | undefined,
+  fundReleasedAt: unknown = null,
+): boolean {
+  if (!status || fundReleasedAt) return false
+  return (GD_FUND_OPEN_STATUSES as string[]).includes(status)
+}
+
+// Donar al fondo se puede mientras el fondo esté abierto y el clúster no esté ya con
+// Global Disciples: con `sent` el botón desaparece del ranking y de la página pública
+// (REQ/161 §4.6), aunque el 10 % siga entrando hasta la liberación.
+export function clusterDonationsOpen(
+  status: string | null | undefined,
+  fundReleasedAt: unknown = null,
+): boolean {
+  return clusterFundOpen(status, fundReleasedAt) && status !== 'sent'
+}
+
 const TRANSITIONS: Record<GdPresentationStatus, GdPresentationStatus[]> = {
+  forming: ['wallet_approved', 'cancelled'],
+  wallet_approved: ['waiting_for_budget', 'waiting_for_pd_job_offer', 'cancelled'],
+  waiting_for_budget: ['waiting_for_pd_job_offer', 'cancelled'],
+  waiting_for_pd_job_offer: ['waiting_for_budget', 'requested', 'cancelled'],
   requested: ['under_review', 'returned', 'cancelled'],
-  under_review: ['returned', 'approved', 'sent'],
-  returned: ['approved', 'under_review'],
-  approved: ['sent'],
+  under_review: ['returned', 'sent'],
+  // `returned` desbloquea los datos: corregirlos y reaprobarlos vuelve a `requested`;
+  // pdJ también puede enviar sin más si sólo eran sugerencias.
+  returned: ['under_review', 'requested', 'sent'],
   sent: ['answered'],
   answered: [],
   cancelled: [],
@@ -114,8 +162,10 @@ export interface PresentationReadiness {
   missing_data: string[]
   /** Billetera del clúster (la de la iglesia iniciadora). */
   wallet: string | null
-  /** Aprobaciones de los pastores para el hash vigente de los datos. */
+  /** Aprobaciones de los pastores para el hash vigente de los datos (fase `data`). */
   approvals: ClusterApprovals
+  /** Aprobaciones de los pastores para la billetera (fase `wallet`). */
+  wallet_approvals: ClusterApprovals
   request: PresentationRequest | null
 }
 
@@ -222,6 +272,9 @@ export function presentationMissingReasons(
   }
   if (missing.includes('approvals')) {
     reasons.push('The pastors have not approved the presentation data yet')
+  }
+  if (missing.includes('wallet_approvals')) {
+    reasons.push('The pastors have not approved the cluster wallet yet')
   }
   for (const pastor of readiness.pastors ?? []) {
     reasons.push(...pastorMissingReasons(pastor))
@@ -373,11 +426,12 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
     : null
   if (!initiatorChurch?.cluster_wallet) missing.push('cluster_wallet')
 
-  // Los pastores aprueban los cinco datos + la billetera; sin todas las aprobaciones el
-  // iniciador no puede pedir la revisión de pdJ.
+  // Dos fases (REQ/161 §4.7): la billetera y los datos se aprueban por separado, cada una
+  // con el hash de lo que se aprueba, y las dos tienen que estar completas.
   const wallet = initiatorChurch?.cluster_wallet ?? null
-  const approvalHash = presentationDataHash(cluster, wallet)
-  const approvals = await getClusterApprovals(db, clusterId, approvalHash)
+  const approvalSummary = await getClusterApprovalSummary(db, clusterId, cluster, wallet)
+  const approvals = approvalSummary.data
+  if (!approvalSummary.wallet.all_approved) missing.push('wallet_approvals')
   if (!approvals.all_approved) missing.push('approvals')
 
   const request: PresentationRequest = {
@@ -415,6 +469,7 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
     missing_data: missingPresentationData(cluster),
     wallet,
     approvals,
+    wallet_approvals: approvalSummary.wallet,
     request:
       request.requested_at ||
       request.status ||

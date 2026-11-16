@@ -13,6 +13,25 @@ export interface CompletedCluster {
   fund_released_at: unknown
 }
 
+// La membresía se congela desde que los pastores aprueban la billetera (REQ/161 §4.7):
+// las aprobaciones son unánimes y por iglesia, así que entrar o salir después dejaría
+// la cuenta de tres en el aire. `returned` sigue congelado (la billetera ya está fija y
+// los datos se reaprueban) y `answered` también (el clúster salió del proceso).
+export const MEMBERSHIP_FROZEN_STATUSES = [
+  'wallet_approved',
+  'waiting_for_budget',
+  'waiting_for_pd_job_offer',
+  'requested',
+  'under_review',
+  'returned',
+  'sent',
+  'answered',
+]
+
+export function clusterMembershipLocked(status: string | null | undefined): boolean {
+  return !!status && MEMBERSHIP_FROZEN_STATUSES.includes(String(status))
+}
+
 /** Clúster del que la iglesia ya recibió fondos, si existe. */
 export async function churchCompletedCluster(
   db: any,

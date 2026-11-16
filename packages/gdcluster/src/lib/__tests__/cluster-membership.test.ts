@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { churchCompletedCluster } from '../cluster-membership.js'
+import { churchCompletedCluster, clusterMembershipLocked } from '../cluster-membership.js'
 
 // Un clúster que ya desembolsó fondos cierra el ciclo de sus iglesias
 // (https://github.com/pasosdeJesus/learn.tg/issues/161): no vuelven a empezar.
@@ -36,5 +36,30 @@ describe('churchCompletedCluster (R-#161)', () => {
     await churchCompletedCluster(db, 173)
     expect(where).toContainEqual(['cc.church_id', '=', 173])
     expect(where).toContainEqual(['c.fund_released_at', 'is not', null])
+  })
+})
+
+// La membresía se congela desde que los pastores aprueban la billetera (REQ/161 §4.7):
+// las aprobaciones son unánimes y por iglesia.
+describe('clusterMembershipLocked (R-#161)', () => {
+  it('freezes the membership from the wallet approval to the answer', () => {
+    for (const status of [
+      'wallet_approved',
+      'waiting_for_budget',
+      'waiting_for_pd_job_offer',
+      'requested',
+      'under_review',
+      'returned',
+      'sent',
+      'answered',
+    ]) {
+      expect(clusterMembershipLocked(status)).toBe(true)
+    }
+  })
+
+  it('lets churches join or leave while the cluster is forming or cancelled', () => {
+    for (const status of ['forming', 'cancelled', null, undefined]) {
+      expect(clusterMembershipLocked(status)).toBe(false)
+    }
   })
 })

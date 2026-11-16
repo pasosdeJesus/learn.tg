@@ -36,7 +36,7 @@ const CHURCH = { id: 20, name: 'Iglesia iniciadora', country_id: 1, cluster_wall
 const MEMBERSHIP = { clustergd_id: 3, joined_at: new Date(), left_at: null }
 const CLUSTER = {
   id: 3, name: 'Esperanza', slug: 'esp', country_id: 1,
-  created_at: new Date(), initiator_church_id: 20, status: 'active',
+  created_at: new Date(), initiator_church_id: 20, status: 'active', gd_status: 'forming',
 }
 
 function buildDeps(overrides: Record<string, any> = {}): any {

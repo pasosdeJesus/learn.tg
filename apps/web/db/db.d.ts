@@ -151,7 +151,7 @@ export interface Clustergd {
   gd_reviewed_at: Timestamp | null;
   gd_sent_at: Timestamp | null;
   gd_sent_by: number | null;
-  gd_status: string | null;
+  gd_status: Generated<string>;
   gd_suggestions: string | null;
   id: Generated<number>;
   initiator_church_id: number | null;
@@ -165,6 +165,7 @@ export interface ClusterGdApproval {
   clustergd_id: number;
   created_at: Generated<Timestamp>;
   data_hash: string;
+  phase: string;
   usuario_id: number;
 }
 

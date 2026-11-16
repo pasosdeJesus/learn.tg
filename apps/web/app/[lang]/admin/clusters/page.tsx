@@ -40,11 +40,17 @@ type Cluster = {
 }
 
 // Estados de la presentación a GD (R-#161); el motor valida las transiciones.
+// Estados de la presentación a GD (R-#161, REQ/161 §4.7); el motor valida las
+// transiciones. pdJ sólo mueve la segunda mitad: los primeros estados los mueven los
+// pastores (aprobaciones) y el iniciador (presupuesto y oferta del director).
 const GD_TRANSITIONS: Record<string, string[]> = {
+  forming: ['wallet_approved', 'cancelled'],
+  wallet_approved: ['waiting_for_budget', 'waiting_for_pd_job_offer', 'cancelled'],
+  waiting_for_budget: ['waiting_for_pd_job_offer', 'cancelled'],
+  waiting_for_pd_job_offer: ['waiting_for_budget', 'requested', 'cancelled'],
   requested: ['under_review', 'returned', 'cancelled'],
-  under_review: ['returned', 'approved', 'sent'],
-  returned: ['approved', 'under_review'],
-  approved: ['sent'],
+  under_review: ['returned', 'sent'],
+  returned: ['under_review', 'requested', 'sent'],
   sent: ['answered'],
   answered: [],
   cancelled: [],

@@ -41,6 +41,7 @@ const T = {
     fundUSDT: 'USDT Fund', fundSLEARN: 'SLEARN Fund',
     noData: 'No data yet.', loading: 'Loading...', donate: 'Donate',
     presented: 'Presented to GD', inProcess: 'In process with pdJ', released: 'Fund released',
+    preparing: 'Preparing the fund',
   },
   es: {
     clustersTab: 'Clústeres', countriesTab: 'Países',
@@ -50,26 +51,34 @@ const T = {
     fundUSDT: 'Fondo USDT', fundSLEARN: 'Fondo SLEARN',
     noData: 'Aún no hay datos.', loading: 'Cargando...', donate: 'Donar',
     presented: 'Presentado a GD', inProcess: 'En proceso con pdJ', released: 'Fondo liberado',
+    preparing: 'Preparando el fondo',
   },
 } as const
 
 const PRESENTED_STATUSES = ['sent', 'answered']
-const IN_PROCESS_STATUSES = ['requested', 'under_review', 'returned', 'approved']
+const IN_PROCESS_STATUSES = ['requested', 'under_review', 'returned']
+// Los estados tempranos se muestran con insignia neutra: ver el clúster en formación es
+// lo que anima a las iglesias a formar el fondo (REQ/161 §4.6, decisión 2026-11-16).
+const PREPARING_STATUSES = ['forming', 'wallet_approved', 'waiting_for_budget', 'waiting_for_pd_job_offer']
 
 function isPresented(cluster: ClusterRow): boolean {
   return !!cluster.gd_status && PRESENTED_STATUSES.includes(cluster.gd_status)
 }
 
-/** "Presentado/verificado" en verde; en proceso con pdJ en ámbar; si no, nada. */
+/** "Presentado/verificado" en verde; en proceso con pdJ en ámbar; preparando, neutro. */
 function gdLabel(cluster: ClusterRow, t: (key: keyof typeof T.en) => string): string | null {
   if (isPresented(cluster)) return cluster.fund_released_at ? t('released') : t('presented')
   if (cluster.gd_status && IN_PROCESS_STATUSES.includes(cluster.gd_status)) return t('inProcess')
+  if (cluster.gd_status && PREPARING_STATUSES.includes(cluster.gd_status)) return t('preparing')
   return null
 }
 
-/** Los clústeres presentados a GD ya no reciben donaciones desde el ranking. */
+/** Los clústeres presentados a GD ya no reciben donaciones desde el ranking, y antes de
+ * aprobar la billetera el fondo del clúster todavía no existe. */
 function acceptsDonations(cluster: ClusterRow): boolean {
-  return !isPresented(cluster) && !cluster.fund_released_at
+  if (isPresented(cluster) || cluster.fund_released_at) return false
+  if (!cluster.gd_status) return false
+  return !PREPARING_STATUSES.includes(cluster.gd_status)
 }
 
 export function RankingClient({ lang, deps }: { lang: string; deps: RankingClientDeps }) {

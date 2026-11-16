@@ -48,9 +48,9 @@ describe('isGDCourse', () => {
 })
 
 describe('resolveGDClusterDestination', () => {
-  it('should resolve to cluster when church has cluster_wallet and is in a clustergd', async () => {
+  it('should resolve to cluster when church has cluster_wallet and the fund is open (R-#161)', async () => {
     const db = mockDb({
-      churchResult: { cluster_wallet: '0xABCD', country_id: 170 },
+      churchResult: { cluster_wallet: '0xABCD', country_id: 170, gd_status: 'wallet_approved' },
     })
 
     const result = await resolveGDClusterDestination(db, 1)
@@ -58,9 +58,33 @@ describe('resolveGDClusterDestination', () => {
     expect(result.destination).toBe('0xABCD')
   })
 
+  it('should resolve to the country fund before the pastors approve the wallet', async () => {
+    const db = mockDb({
+      churchResult: { cluster_wallet: '0xABCD', country_id: 170, gd_status: 'forming' },
+      usuarioResult: { pais_id: 170 },
+      paisResult: { alfa2: 'CO', tipo_region: 1 },
+    })
+
+    const result = await resolveGDClusterDestination(db, 1)
+    expect(result.type).toBe('country')
+    expect(result.destination).toBe('CO')
+  })
+
+  it('should resolve to the country fund when GD answered, even if the release failed', async () => {
+    const db = mockDb({
+      churchResult: { cluster_wallet: '0xABCD', country_id: 170, gd_status: 'answered', fund_released_at: null },
+      usuarioResult: { pais_id: 170 },
+      paisResult: { alfa2: 'CO', tipo_region: 1 },
+    })
+
+    const result = await resolveGDClusterDestination(db, 1)
+    expect(result.type).toBe('country')
+    expect(result.destination).toBe('CO')
+  })
+
   it('should resolve to the country fund once the cluster fund was released (R-#161)', async () => {
     const db = mockDb({
-      churchResult: { cluster_wallet: '0xABCD', country_id: 170, fund_released_at: new Date() },
+      churchResult: { cluster_wallet: '0xABCD', country_id: 170, fund_released_at: new Date(), gd_status: 'sent' },
       usuarioResult: { pais_id: 170 },
       paisResult: { alfa2: 'CO', tipo_region: 1 },
     })

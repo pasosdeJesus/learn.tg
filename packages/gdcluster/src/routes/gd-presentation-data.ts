@@ -11,6 +11,34 @@ import type { GdclusterDeps } from '../index.js'
 
 const PDF_PATH_PATTERN = /^cluster\/\d+\/(budget|director)\.pdf$/
 
+// El estado acompaña el avance de los datos (REQ/161 §4.7): con la billetera aprobada el
+// clúster espera el presupuesto (`waiting_for_budget`) y, cuando el presupuesto está
+// completo, la oferta del director (`waiting_for_pd_job_offer`). Un cambio de datos en
+// `returned` devuelve el clúster a la espera y caduca las aprobaciones de la fase `data`
+// (el hash se recalcula al leer, así que caducan solas).
+const DATA_STATES = ['wallet_approved', 'waiting_for_budget', 'waiting_for_pd_job_offer', 'returned']
+
+async function syncDataState(
+  db: any,
+  clusterId: number,
+  before: any,
+  after: any,
+  usuarioId: number,
+): Promise<void> {
+  const status = String(before.gd_status ?? 'forming')
+  if (!DATA_STATES.includes(status)) return
+  const budgetReady = Number(after.fourth_year_budget ?? 0) > 0 && !!after.budget_draft_path
+  const next = budgetReady ? 'waiting_for_pd_job_offer' : 'waiting_for_budget'
+  if (next === status) return
+  await db
+    .updateTable('clustergd')
+    .set({ gd_status: next, updated_at: new Date() })
+    .where('id', '=', clusterId)
+    .where('gd_status', '=', status)
+    .execute()
+  await addClusterHistory(db, clusterId, 'gd_status_changed', status, next, usuarioId)
+}
+
 interface Context {
   db: any
   cluster: any
@@ -84,6 +112,7 @@ export async function updateBudget(deps: GdclusterDeps, req: NextRequest, params
 
     await ctx.db.updateTable('clustergd').set(updates).where('id', '=', clusterId).execute()
     await addClusterHistory(ctx.db, clusterId, 'budget_updated', null, dateLabel(), ctx.usuarioId)
+    await syncDataState(ctx.db, clusterId, ctx.cluster, { ...ctx.cluster, ...updates }, ctx.usuarioId)
     return NextResponse.json({
       success: true,
       budget: {
@@ -129,6 +158,7 @@ export async function updateDirector(deps: GdclusterDeps, req: NextRequest, para
 
     await ctx.db.updateTable('clustergd').set(updates).where('id', '=', clusterId).execute()
     await addClusterHistory(ctx.db, clusterId, 'director_updated', null, dateLabel(), ctx.usuarioId)
+    await syncDataState(ctx.db, clusterId, ctx.cluster, { ...ctx.cluster, ...updates }, ctx.usuarioId)
     return NextResponse.json({
       success: true,
       director: {

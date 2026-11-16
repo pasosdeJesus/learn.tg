@@ -30,6 +30,12 @@ type Presentation = {
   } | null
   wallet?: string | null
   can_approve?: boolean
+  wallet_approvals?: {
+    pastors: number
+    approved: number
+    all_approved: boolean
+    voters: number[]
+  } | null
   approvals?: {
     pastors: number
     approved: number
@@ -70,7 +76,11 @@ const LABELS: Record<string, { en: string; es: string }> = {
   approvalsCount: { en: '{{0}} of {{1}} pastors approved', es: '{{0}} de {{1}} pastores aprobaron' },
   approve: { en: 'I know and approve the data and the wallet', es: 'Conozco y apruebo los datos y la billetera' },
   approvedNotice: { en: 'Your approval is recorded', es: 'Tu aprobación quedó registrada' },
-  approvalsComplete: { en: 'All the pastors approved: the initiator can request the presentation.', es: 'Todos los pastores aprobaron: el iniciador puede solicitar la presentación.' },
+  approvalsComplete: { en: 'All the pastors approved the data: the initiator can ask pdJ to review it.', es: 'Todos los pastores aprobaron los datos: el iniciador puede pedir la revisión de pdJ.' },
+  walletApprovalsPending: {
+    en: 'The pastors have not approved the cluster wallet yet: the fund does not exist until they do, and the data approval comes after that.',
+    es: 'Los pastores aún no aprueban la billetera del clúster: el fondo no existe hasta que lo hagan, y la aprobación de los datos viene después.',
+  },
   walletPending: { en: 'The cluster wallet is not set.', es: 'La billetera del clúster no está configurada.' },
   cancel: { en: 'Cancel the request', es: 'Cancelar la solicitud' },
   cancelHint: {
@@ -400,6 +410,9 @@ export function ClusterPresentationPanel({
         {presentation && (
           <div className="text-xs text-gray-700 space-y-1">
             {!presentation.wallet && <p className="text-amber-700">{tr('walletPending')}</p>}
+            {presentation.wallet_approvals && !presentation.wallet_approvals.all_approved && (
+              <p className="text-amber-700">{tr('walletApprovalsPending')}</p>
+            )}
             {presentation.approvals && (
               <p>{tr('approvalsCount', String(presentation.approvals.approved), String(presentation.approvals.pastors))}</p>
             )}
@@ -407,7 +420,15 @@ export function ClusterPresentationPanel({
               <p className="font-semibold text-green-700">{tr('approvalsComplete')}</p>
             ) : presentation.can_approve ? (
               <div className="pt-1">
-                <Button size="sm" onClick={approve} disabled={busy === 'approve' || !presentation.wallet}>
+                <Button
+                  size="sm"
+                  onClick={approve}
+                  disabled={
+                    busy === 'approve'
+                    || !presentation.wallet
+                    || !presentation.wallet_approvals?.all_approved
+                  }
+                >
                   {tr('approve')}
                 </Button>
               </div>

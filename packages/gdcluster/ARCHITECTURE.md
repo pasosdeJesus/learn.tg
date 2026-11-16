@@ -80,6 +80,20 @@ only the name, the member churches, the invitations and the history. The present
 requested **only** here: the card on the course page links to this page instead of repeating the
 control (2026-11-13).
 
+### D6 — Two approval phases, and the fund opens with the wallet one
+
+The pastors approve twice, each phase with its own SHA-256 (`lib/cluster-approvals.ts`,
+REQ/161 §4.7). Phase **`wallet`** covers `church.cluster_wallet` of the initiator church: the third
+approval moves the cluster to `wallet_approved`, fixes the wallet and makes the cluster fund exist —
+until then the 10 % of purchases and scholarships goes to the country fund, `donation_wallet` is
+`null` and no church can join or leave (`409 cluster_membership_locked`). Phase **`data`** covers
+the five fields sent to GD and is only open in `waiting_for_pd_job_offer` and `returned`; the third
+approval *is* the request, so the cluster moves to `requested` and the readiness checks (including
+`cluster_fund_empty`) run there. Both live in `POST /api/cluster/[id]/approval?phase=wallet|data`,
+which is why the route answers with the phase it recorded. `clusterFundOpen()` in
+`lib/gd-presentation.ts` is the single place that says whether the cluster fund exists: it gates the
+routing of the 10 % and the Donate button, so the two cannot drift apart.
+
 ## Data flow
 
 ### Cluster lifecycle
@@ -124,7 +138,10 @@ control (2026-11-13).
 rewards engine (add-donation / premium-purchase)
   → deps.routeReward(ctx)                      [core: lib/reward-routing.ts]
   → runHooks('reward:route-destination', ctx)  [gdcluster handler registered]
-  → isGDCourse? → resolve destination (cluster wallet → country → SL)
+  → isGDCourse? → resolve destination (open cluster fund → country → SL)
+    the cluster fund is open only while `clusterFundOpen(gd_status, fund_released_at)`:
+    from `wallet_approved` to `sent`, before the release; `answered` already routes to
+    the country (REQ/161 §4.7)
   → 10% routed to ClusterFundsV2 (100% net)
   → remaining split to course vault / pdJ / etc.
 ```

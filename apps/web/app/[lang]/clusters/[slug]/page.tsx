@@ -41,6 +41,7 @@ const T = {
     active: 'Formed: the three churches are in',
     finished: 'Finished: the fund was released',
     inProcess: 'In process with pdJ',
+    preparing: 'Preparing the fund',
     presented: 'Presented to Global Disciples',
     answered: 'Global Disciples answered',
     release: 'Fund release transaction',
@@ -60,6 +61,7 @@ const T = {
     active: 'Formado: ya están las tres iglesias',
     finished: 'Terminado: el fondo fue liberado',
     inProcess: 'En proceso con pdJ',
+    preparing: 'Preparando el fondo',
     presented: 'Presentado a Global Disciples',
     answered: 'Global Disciples respondió',
     release: 'Transacción de liberación del fondo',
@@ -95,7 +97,13 @@ export default function PublicClusterPage({ params }: { params: Promise<{ lang: 
     if (c.finished) return t('finished')
     if (c.gd_status === 'answered') return t('answered')
     if (c.gd_status && ['sent', 'answered'].includes(c.gd_status)) return t('presented')
-    if (c.gd_status && ['requested', 'under_review', 'returned', 'approved'].includes(c.gd_status)) return t('inProcess')
+    if (c.gd_status && ['requested', 'under_review', 'returned'].includes(c.gd_status)) return t('inProcess')
+    if (
+      c.gd_status &&
+      ['forming', 'wallet_approved', 'waiting_for_budget', 'waiting_for_pd_job_offer'].includes(c.gd_status)
+    ) {
+      return t('preparing')
+    }
     return c.status === 'active' ? t('active') : t('pending')
   }
 

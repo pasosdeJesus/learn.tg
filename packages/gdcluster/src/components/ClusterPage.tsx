@@ -96,6 +96,11 @@ const tEn = {
   gdMissingNoPastors: 'no pastors',
   gdMissingWallet: 'the cluster wallet is not set',
   gdMissingApprovals: 'the pastors have not approved the data',
+  gdMissingWalletApprovals: 'the pastors have not approved the wallet yet',
+  walletApprovals: '{{0}} of {{1}} pastors approved the wallet',
+  walletApproveButton: 'I know and approve this cluster wallet',
+  walletApprovedNotice: 'Your approval of the wallet is recorded',
+  walletFixedNotice: 'The wallet is fixed: the pastors approved it.',
   noCluster: 'You are not a member of a cluster yet.',
   error: 'Something went wrong.',
 }
@@ -174,6 +179,11 @@ const tEs: typeof tEn = {
   gdMissingInviteMember: 'no ha invitado a un miembro de su iglesia',
   gdMissingWallet: 'la billetera del clúster no está configurada',
   gdMissingApprovals: 'los pastores no han aprobado los datos',
+  gdMissingWalletApprovals: 'los pastores aún no aprueban la billetera',
+  walletApprovals: '{{0}} de {{1}} pastores aprobaron la billetera',
+  walletApproveButton: 'Conozco y apruebo esta billetera del clúster',
+  walletApprovedNotice: 'Tu aprobación de la billetera quedó registrada',
+  walletFixedNotice: 'La billetera está fija: los pastores la aprobaron.',
   gdMissingNoPastor: 'sin pastor principal registrado',
   gdMissingActive: 'el clúster debe estar activo',
   gdMissingMembers: 'al menos 3 iglesias',
@@ -322,6 +332,12 @@ interface PresentationView {
   missing_data?: string[]
   isInitiator: boolean
   isMember?: boolean
+  wallet_approvals?: {
+    pastors: number
+    approved: number
+    all_approved: boolean
+    voters: number[]
+  } | null
   request: PresentationRequestView | null
 }
 
@@ -338,6 +354,7 @@ const CLUSTER_MISSING: Record<string, keyof typeof tEn> = {
   no_pastors: 'gdMissingNoPastors',
   cluster_wallet: 'gdMissingWallet',
   approvals: 'gdMissingApprovals',
+  wallet_approvals: 'gdMissingWalletApprovals',
 }
 
 const MIN_CHURCHES = 3
@@ -368,6 +385,7 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
   const [editingWallet, setEditingWallet] = useState(false)
   const [newWallet, setNewWallet] = useState('')
   const [savingWallet, setSavingWallet] = useState(false)
+  const [approvingWallet, setApprovingWallet] = useState(false)
   const [inviteWallet, setInviteWallet] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteMessage, setInviteMessage] = useState('')
@@ -527,6 +545,29 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
       toast({ title: e.message, variant: 'destructive' })
     } finally {
       setSavingWallet(false)
+    }
+  }
+
+  // Aprobación de la billetera (fase `wallet`, REQ/161 §4.7). La tercera aprobación
+  // mueve el estado a `wallet_approved` y fija la billetera.
+  const handleApproveWallet = async () => {
+    if (!clusterId) return
+    setApprovingWallet(true)
+    try {
+      const res = await fetch(`/api/cluster/${clusterId}/approval?phase=wallet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: address, phase: 'wallet' }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || t('error'))
+      toast({ title: t('walletApprovedNotice') })
+      await refresh()
+      fetchPresentation()
+    } catch (e: any) {
+      toast({ title: e.message, variant: 'destructive' })
+    } finally {
+      setApprovingWallet(false)
     }
   }
 
@@ -865,7 +906,9 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
           <section className={card}>
             <h2 className={cardTitle}>{t('clusterWallet')}</h2>
             <div className="flex items-center justify-between gap-2 mb-1">
-              {cluster.isInitiator && !editingWallet ? (
+              {/* La billetera aprobada por los pastores queda fija (REQ/161 §4.7): se
+                  edita sólo mientras el clúster se está formando. */}
+              {cluster.isInitiator && !editingWallet && !(presentation?.wallet_approvals?.all_approved) ? (
                 <button
                   type="button"
                   onClick={() => { setEditingWallet(true); setNewWallet(cluster.cluster_wallet || '') }}
@@ -909,6 +952,31 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
               </div>
             ) : (
               <p className="text-xs text-gray-500">{t('notConfigured')}</p>
+            )}
+            {/* Aprobación de la billetera (REQ/161 §4.7): con la tercera aprobación el
+                fondo del clúster existe y la billetera queda fija. */}
+            {cluster.cluster_wallet && presentation?.wallet_approvals && (
+              <div className="mt-2 border-t border-gray-200 pt-2">
+                <p className="text-xs text-gray-600">
+                  {t('walletApprovals')
+                    .replace('{{0}}', String(presentation.wallet_approvals.approved))
+                    .replace('{{1}}', String(presentation.wallet_approvals.pastors))}
+                </p>
+                {presentation.wallet_approvals.all_approved ? (
+                  <p className="text-xs text-green-700 mt-1">{t('walletFixedNotice')}</p>
+                ) : (
+                  presentation.isMember && (
+                    <deps.Button
+                      size="sm"
+                      className="mt-2"
+                      disabled={approvingWallet}
+                      onClick={() => handleApproveWallet()}
+                    >
+                      {t('walletApproveButton')}
+                    </deps.Button>
+                  )
+                )}
+              </div>
             )}
             <p className="text-xs text-gray-500 mt-2">{t('walletHint')}</p>
           </section>

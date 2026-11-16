@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { sql } from 'kysely'
 import type { GdclusterDeps } from '../index.js'
+import { clusterDonationsOpen } from '../lib/gd-presentation.js'
 
 // R-#299: superficie **pública** de los clústeres (página `/{lang}/clusters/[slug]` y
 // listado para el ranking). El alias (`slug`) es lo único que se publica del clúster:
@@ -151,10 +152,10 @@ export async function getPublicCluster(deps: GdclusterDeps, params: Record<strin
       : null
 
     // Donar necesita la billetera del fondo, y sólo se publica mientras se pueda donar
-    // (región tipo 1, fondo no liberado y clúster no presentado a GD), igual que el
-    // ranking: después de presentarlo o liberarlo el botón desaparece.
-    const presented = !!cluster.gd_status && ['sent', 'answered'].includes(cluster.gd_status)
-    const donationWallet = cluster.cluster_wallet && !cluster.fund_released_at && !presented
+    // (región tipo 1, fondo del clúster abierto y clúster no presentado a GD). El fondo
+    // existe desde que los pastores aprueban la billetera (REQ/161 §4.7).
+    const donationWallet = cluster.cluster_wallet
+      && clusterDonationsOpen(cluster.gd_status, cluster.fund_released_at)
       && country?.tipo_region === 1
       ? cluster.cluster_wallet
       : null

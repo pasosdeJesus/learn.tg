@@ -1,6 +1,7 @@
 import { formatUnits, type Address } from 'viem'
 import ClusterFundsV2Abi from '../abis/ClusterFundsV2.json'
 import Erc20Abi from '../abis/IERC20.json'
+import { clusterFundOpen } from './gd-presentation.js'
 
 const GD_COURSE_IDS = [10, 11]
 
@@ -37,21 +38,21 @@ export async function resolveGDClusterDestination(
   usuarioId: number,
 ): Promise<GDDestination> {
   // 1. Try church cluster
-  // El 10 % sigue yendo al fondo del clúster mientras ese fondo exista, aunque el clúster
-  // haya salido del ranking (https://github.com/pasosdeJesus/learn.tg/issues/161). Solo
-  // cuando el fondo se entregó a la billetera del clúster (`fund_released_at`) deja de
-  // haber fondo de clúster y el 10 % pasa al fondo del país.
+  // El 10 % va al fondo del clúster sólo mientras ese fondo exista: desde que los
+  // pastores aprueban la billetera (`wallet_approved`) y hasta que el fondo se entrega
+  // (`fund_released_at`); con `answered` el clúster ya salió del proceso
+  // (REQ/161 §4.7). Antes, y después, el 10 % va al fondo del país.
   const church = await db.selectFrom('church')
     .innerJoin('church_clustergd as cc', 'cc.church_id', 'church.id')
     .innerJoin('clustergd as c', 'c.id', 'cc.clustergd_id')
-    .select(['church.cluster_wallet', 'church.country_id', 'c.fund_released_at'])
+    .select(['church.cluster_wallet', 'church.country_id', 'c.fund_released_at', 'c.gd_status'])
     .where('church.id', 'in',
       db.selectFrom('usuario').select('church_id').where('id', '=', usuarioId)
     )
     .where('cc.left_at', 'is', null)
     .executeTakeFirst()
 
-  if (church?.cluster_wallet && !church.fund_released_at) {
+  if (church?.cluster_wallet && clusterFundOpen(church.gd_status, church.fund_released_at)) {
     return { type: 'cluster', destination: church.cluster_wallet }
   }
 

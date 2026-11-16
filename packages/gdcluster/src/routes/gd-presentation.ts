@@ -87,7 +87,7 @@ export async function getPresentation(deps: GdclusterDeps, req: NextRequest, par
     const request = readiness.request
     const canApprove = ctx.isMember
       && ctx.auth.usuario.church_relationship === 'pastor'
-      && !['under_review', 'approved', 'sent', 'answered'].includes(ctx.cluster.gd_status)
+      && !['requested', 'under_review', 'sent', 'answered'].includes(ctx.cluster.gd_status)
       && !(readiness.approvals?.voters ?? []).includes(Number(ctx.auth.usuario.id))
     return NextResponse.json({
       ...readiness,
@@ -153,19 +153,17 @@ export async function requestPresentation(deps: GdclusterDeps, req: NextRequest,
       return NextResponse.json({ error: 'Only the cluster initiator can request the presentation' }, { status: 403 })
     }
 
-    const status = (ctx.cluster.gd_status as string | null) ?? null
+    // La solicitud vigente es cualquier estado desde `requested`: la solicitud *es* la
+    // tercera aprobación de los datos (REQ/161 §4.7).
+    const PRESENTED = ['requested', 'under_review', 'returned', 'sent', 'answered']
+    const status = (ctx.cluster.gd_status as string | null) ?? 'forming'
     if (status === 'returned') {
       return NextResponse.json(
-        { error: 'The request was returned to you: correct the data and pdJ approves it again' },
+        { error: 'The request was returned to you: correct the data and the pastors approve it again' },
         { status: 409 },
       )
     }
-    // Solicitud vigente: `cancelled` la borra y un clúster anterior a `gd_status` que ya
-    // tenía `gd_requested_at` sigue contando como solicitado.
-    const active = status
-      ? status !== 'cancelled'
-      : !!ctx.cluster.gd_requested_at
-    if (active) {
+    if (PRESENTED.includes(status)) {
       const readiness = await getPresentationReadiness(db, clusterId)
       return NextResponse.json({ success: true, alreadyRequested: true, request: readiness.request })
     }
@@ -301,8 +299,8 @@ export async function updatePresentation(deps: GdclusterDeps, req: NextRequest, 
 
     const now = new Date()
     const updates: Record<string, unknown> = { gd_status: status, updated_at: now }
-    // `requested` y `approved` fijan los cinco datos; `returned` los desbloquea.
-    if (status === 'requested' || status === 'approved') {
+    // `requested` fija los cinco datos; `returned` los desbloquea.
+    if (status === 'requested') {
       updates.budget_fixed_at = cluster.budget_fixed_at ?? now
       updates.director_fixed_at = cluster.director_fixed_at ?? now
     }
@@ -313,11 +311,6 @@ export async function updatePresentation(deps: GdclusterDeps, req: NextRequest, 
       updates.gd_suggestions = text(suggestions) ?? cluster.gd_suggestions ?? null
       updates.budget_fixed_at = null
       updates.director_fixed_at = null
-    }
-    if (status === 'approved') {
-      updates.gd_approved_at = now
-      updates.gd_evaluation = text(evaluation) ?? cluster.gd_evaluation ?? null
-      updates.gd_suggestions = text(suggestions) ?? cluster.gd_suggestions ?? null
     }
     if (status === 'sent') {
       // Presentada en la base de datos = verificada en el contrato.

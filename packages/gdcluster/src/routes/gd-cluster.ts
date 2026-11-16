@@ -13,7 +13,7 @@ import {
 } from '../lib/gd-utils.js'
 import { readClusterFunds, readCountryFunds, readClusterDonations, hasFunds, summarizeFunds } from '../lib/cluster-funds.js'
 import { checkWalletControl, validateClusterWallet } from '../lib/cluster-wallet.js'
-import { churchCompletedCluster } from '../lib/cluster-membership.js'
+import { churchCompletedCluster, clusterMembershipLocked } from '../lib/cluster-membership.js'
 import { getClusterPastors } from '../lib/cluster-pastors.js'
 import { suggestSlug, slugWithId, validateSlug } from '../lib/slug.js'
 import type { GdclusterDeps } from '../index.js'
@@ -367,9 +367,13 @@ export async function updateCluster(
     let normalizedWallet: string | null | undefined
     let walletChecksummed = true
     let initiatorChurch: { id: number; cluster_wallet: string | null } | undefined
-    if (clusterWallet !== undefined && ['requested', 'under_review', 'approved', 'sent', 'answered'].includes(cluster.gd_status)) {
+    if (clusterWallet !== undefined && cluster.gd_status !== 'forming' && cluster.gd_status !== 'cancelled') {
       return NextResponse.json(
-        { error: 'The cluster wallet is fixed while the presentation is with pdJ or with Global Disciples', code: 'gd_fields_locked' },
+        {
+          error:
+            'The cluster wallet is fixed: it was approved by the pastors. A change needs support to edit it directly.',
+          code: 'gd_fields_locked',
+        },
         { status: 409 },
       )
     }
@@ -595,6 +599,17 @@ export async function leaveCluster(
 
     const cluster = await db.selectFrom('clustergd').selectAll().where('id', '=', clusterId).executeTakeFirst()
     if (!cluster) return NextResponse.json({ error: 'Cluster not found' }, { status: 404 })
+
+    if (clusterMembershipLocked(cluster.gd_status)) {
+      return NextResponse.json(
+        {
+          error:
+            'The membership is frozen: the pastors approved the cluster wallet, so churches cannot leave or join. Ask support only if a pastor is replaced.',
+          code: 'cluster_membership_locked',
+        },
+        { status: 409 },
+      )
+    }
 
     const isInitiator = cluster.initiator_church_id === church.id
 

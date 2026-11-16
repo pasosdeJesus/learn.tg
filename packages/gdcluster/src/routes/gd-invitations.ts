@@ -8,7 +8,7 @@ import {
   logUserEvent,
   getClusterCandidates,
 } from '../lib/gd-utils.js'
-import { churchCompletedCluster } from '../lib/cluster-membership.js'
+import { churchCompletedCluster, clusterMembershipLocked } from '../lib/cluster-membership.js'
 import type { GdclusterDeps } from '../index.js'
 
 // Rutas https://github.com/pasosdeJesus/learn.tg/issues/220: estado del pastor, candidatos e invitaciones de clúster.
@@ -176,6 +176,24 @@ export async function acceptInvitation(deps: GdclusterDeps, req: NextRequest) {
           code: 'cluster_completed',
         },
         { status: 403 },
+      )
+    }
+
+    // El clúster en proceso congela su membresía: las aprobaciones son unánimes y por
+    // iglesia (REQ/161 §4.7).
+    const target = await db
+      .selectFrom('clustergd')
+      .select('gd_status')
+      .where('id', '=', invitation.clustergd_id)
+      .executeTakeFirst()
+    if (clusterMembershipLocked(target?.gd_status)) {
+      return NextResponse.json(
+        {
+          error:
+            'That cluster already approved its wallet, so its membership is frozen: no church can join it now.',
+          code: 'cluster_membership_locked',
+        },
+        { status: 409 },
       )
     }
 
