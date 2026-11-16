@@ -1,7 +1,7 @@
 // m-engine.generated.ts — generado por `eng:sync`; no editar a mano.
 export const engine = {
   "name": "generated-msip",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "model": {
     "tables": [
       "msip_anexo",

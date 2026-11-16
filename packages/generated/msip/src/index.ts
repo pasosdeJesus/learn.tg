@@ -23,8 +23,14 @@ export {
 } from './forward/index.js';
 export type { BaseModelMigration, SetupPlan, MigrationPolicyViolation } from './forward/index.js';
 
-// Forma genérica del modelo (https://gitlab.com/pasosdeJesus/m/-/work_items/39 §3.5): `{ version, tables, migrations }`.
-export { model } from './model.js';
+// Forma genérica del modelo (https://gitlab.com/pasosdeJesus/m/-/work_items/39 §3.5): `{ version, tables, migrations }`
+// y tipos por tabla (`Selectable`/`Insertable`/`Updateable`) + `MsipDB`/`DB`.
+export * from './model.js';
+
+// Reglas puras, presentación y consultas tipadas (traducción de msip-2.2, REQ/69).
+export * from './rules.js';
+export * from './present.js';
+export * from './scopes.js';
 
 // Datos iniciales (seed): helpers puros; el CLI aporta la conexión (`eng:msip:seed`).
 export { seedTables, seedIsLoaded, countStatement, truncateStatement } from './seed.js';
