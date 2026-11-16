@@ -409,4 +409,11 @@ describe('guideImageUrls (R-#268)', () => {
   it('finds nothing in a guide without figures', () => {
     expect(guideImageUrls('<p>guía sin figuras</p>')).toEqual([])
   })
+
+  // Los diagramas Mermaid llegan como <img> a un SVG generado
+  // (lib/remarkMermaid.mjs): sin esto la guía descargada se abriría sin ellos.
+  it('caches the diagrams generated from the mermaid blocks', () => {
+    expect(guideImageUrls('<img src="/img/diagrams/4b979aca84596fb0.svg" alt="diagrama">'))
+      .toEqual(['/img/diagrams/4b979aca84596fb0.svg'])
+  })
 })

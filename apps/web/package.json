@@ -86,6 +86,7 @@
     "@next/swc-wasm-nodejs": "16.3.1",
     "@pasosdejesus/contract-test": "catalog:",
     "@pasosdejesus/edr": "catalog:",
+    "@speajus/mermaid-to-svg": "^0.1.6",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.3",

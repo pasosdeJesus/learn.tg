@@ -63,6 +63,51 @@ Rules for writing course guides (content in `resources/{lang}/{course}/`).
   (`GasInsufficientPanel`, `donation-target`, the cluster and referral pages, the E2E
   specs): renumbering a guide means updating those references too.
 
+## Diagrams
+
+The diagram is written **inside the guide**, as a fenced Mermaid block; the text after `mermaid`
+is the alt text (if left empty, the nearest heading above it is used):
+
+````markdown
+```mermaid Three churches invite two others each
+flowchart LR
+  A[Church 1] --> C[Cluster]
+  B[Church 2] --> C
+```
+````
+
+The renderer (`apps/web/lib/remarkMermaid.mjs`, already wired into `guideProcessor`) turns that
+block into `<img src="/img/diagrams/<hash>.svg" alt="…">`. Three properties follow from that
+design, and they are the reason it is an image and not inline SVG:
+
+- the page ships **no Mermaid runtime** (the guide HTML is also built in the browser, where
+  `mermaid` is tens of megabytes and a flowchart takes seconds);
+- it survives `allowDangerousHtml: false` (the course page renders with it) and
+  `guideImageUrls` caches the `<img>` for **offline reading**;
+- the source stays next to the paragraph that explains it, instead of in a separate folder.
+
+The SVG is generated **before the commit**, never by hand and never at request time. The file name
+is a hash of the source, so editing a diagram produces a new file and the old one is deleted:
+
+```sh
+cd apps/web
+node bin/mmd2svg.mjs --scan ../../resources --out public/img/diagrams --theme neutral
+```
+
+- `@speajus/mermaid-to-svg` renders in Node (`mermaid` + `elkjs` + `react-dom/server`, text measured
+  with jsdom): **no browser needed**, and it works on OpenBSD/adJ (measured 2026-11-15: flowchart
+  2–6 s, sequence < 100 ms).
+- Themes: `default`, `dark`, `forest`, `neutral`; use `neutral` for the guides so it matches the
+  page. Existing SVGs are skipped unless `--force` (needed after changing the theme).
+- Commit the guide **and** the generated SVG: the guide is the source, the SVG the artifact the app
+  serves and the service worker caches.
+- The last line of the scan (`N diagramas: X generados, Y ya existían, Z borrados`) is the summary;
+  a failure exits non-zero and names the `guide:line`.
+- `apps/web/lib/__tests__/guides-consistency.test.ts` fails when a diagram has no SVG generated or
+  no alt text, so a forgotten scan is caught before the commit.
+- A standalone `.mmd` still works (`node bin/mmd2svg.mjs diagrama.mmd salida.svg`), for diagrams
+  outside a guide.
+
 ## Database
 
 - Each guide is a row in `cor1440_gen_actividadpf` linked to a course via

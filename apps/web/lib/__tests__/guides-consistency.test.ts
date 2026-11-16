@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import * as path from 'node:path'
 import { guideProcessor } from '@/lib/guide-markdown.mjs'
+import { diagramUrl, extractMermaidDiagrams } from '@/lib/remarkMermaid.mjs'
 import { answersFromGuideFile, normalizeClue } from '../../e2e/helpers/crossword.mjs'
 import { MIN_CHURCHES, MIN_PROFILE_SCORE } from '../../../../packages/gdcluster/src/lib/gd-presentation.js'
 
@@ -113,6 +114,26 @@ describe('GD guides consistency (R-#161)', () => {
         const images = [...text.matchAll(/!\[[^\]]*\]\((\/img\/[^)\s]+)/g)].map((match) => match[1])
         for (const image of images) {
           expect(existsSync(path.join(PUBLIC, image.replace(/^\//, ''))), `${course.lang}: ${image}`).toBe(true)
+        }
+      }
+    }
+  })
+
+  it('has the svg of every mermaid diagram already generated', () => {
+    // El diagrama se escribe dentro de la guía (```mermaid) y el renderer lo
+    // cambia por un <img>; el SVG lo produce `bin/mmd2svg.mjs --scan` antes del
+    // commit (doc/guide-writing.md § Diagrams). Si falta, la guía sale sin figura.
+    for (const course of COURSES) {
+      for (let n = 1; n <= 6; n++) {
+        const { text } = readGuide(course, n)!
+        for (const diagram of extractMermaidDiagrams(text)) {
+          const url = diagramUrl(diagram.source)
+          expect(
+            existsSync(path.join(PUBLIC, url.replace(/^\//, ''))),
+            `${course.lang}/${course.suffix(n)}:${diagram.line} → ${url} ` +
+              `(corre: node bin/mmd2svg.mjs --scan ../../resources --out public/img/diagrams)`,
+          ).toBe(true)
+          expect(diagram.alt, `${course.lang}/${course.suffix(n)}:${diagram.line}`).not.toBe('')
         }
       }
     }
