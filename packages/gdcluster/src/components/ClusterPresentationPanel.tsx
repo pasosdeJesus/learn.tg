@@ -70,11 +70,11 @@ const LABELS: Record<string, { en: string; es: string }> = {
   viewPdf: { en: 'View PDF', es: 'Ver PDF' },
   approvals: { en: 'Pastors approval', es: 'Aprobación de los pastores' },
   approvalsHint: {
-    en: 'Each pastor presses the button to confirm that they know and approve what will be sent to Global Disciples (first-year budget and director offer) and the cluster wallet. With every approval the initiator can request pdJ review.',
-    es: 'Cada pastor pulsa el botón para confirmar que conoce y aprueba lo que se enviará a Global Disciples (presupuesto del primer año y oferta del director) y la billetera del clúster. Con todas las aprobaciones el iniciador puede pedir la revisión de pdJ.',
+    en: 'Each pastor presses the button to confirm that they know and approve the five data sent to Global Disciples (the fourth-year budget and the director offer). The cluster wallet has its own approval in the wallet card.',
+    es: 'Cada pastor pulsa el botón para confirmar que conoce y aprueba los cinco datos que se envían a Global Disciples (el presupuesto del cuarto año y la oferta del director). La billetera del clúster tiene su propia aprobación en la tarjeta de la billetera.',
   },
   approvalsCount: { en: '{{0}} of {{1}} pastors approved', es: '{{0}} de {{1}} pastores aprobaron' },
-  approve: { en: 'I know and approve the data and the wallet', es: 'Conozco y apruebo los datos y la billetera' },
+  approve: { en: 'I know and approve the data', es: 'Conozco y apruebo los datos' },
   approvedNotice: { en: 'Your approval is recorded', es: 'Tu aprobación quedó registrada' },
   approvalsComplete: { en: 'All the pastors approved the data: the initiator can ask pdJ to review it.', es: 'Todos los pastores aprobaron los datos: el iniciador puede pedir la revisión de pdJ.' },
   walletApprovalsPending: {

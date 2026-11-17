@@ -97,10 +97,14 @@ const tEn = {
   gdMissingWallet: 'the cluster wallet is not set',
   gdMissingApprovals: 'the pastors have not approved the data',
   gdMissingWalletApprovals: 'the pastors have not approved the wallet yet',
+  fundNotOpen: 'Not created yet: the fund exists once the three pastors approve the wallet.',
+  donationsNotOpen: 'Donations open when the wallet is approved.',
+  walletApprovalsTitle: 'Pastors approval for the cluster wallet',
   walletApprovals: '{{0}} of {{1}} pastors approved the wallet',
+  walletInitiatorFirst: 'The initiator approves the wallet first: until then it can still change.',
   walletApproveButton: 'I know and approve this cluster wallet',
   walletApprovedNotice: 'Your approval of the wallet is recorded',
-  walletFixedNotice: 'The wallet is fixed: the pastors approved it.',
+  walletFixedNotice: 'The wallet is fixed: the initiator approved it, and the other pastors can approve it now.',
   noCluster: 'You are not a member of a cluster yet.',
   error: 'Something went wrong.',
 }
@@ -180,10 +184,14 @@ const tEs: typeof tEn = {
   gdMissingWallet: 'la billetera del clúster no está configurada',
   gdMissingApprovals: 'los pastores no han aprobado los datos',
   gdMissingWalletApprovals: 'los pastores aún no aprueban la billetera',
+  fundNotOpen: 'Aún no existe: el fondo se crea cuando los tres pastores aprueban la billetera.',
+  donationsNotOpen: 'Las donaciones se abren cuando se aprueba la billetera.',
+  walletApprovalsTitle: 'Aprobación de los pastores de la billetera del clúster',
   walletApprovals: '{{0}} de {{1}} pastores aprobaron la billetera',
+  walletInitiatorFirst: 'El iniciador aprueba la billetera primero: hasta entonces todavía puede cambiar.',
   walletApproveButton: 'Conozco y apruebo esta billetera del clúster',
   walletApprovedNotice: 'Tu aprobación de la billetera quedó registrada',
-  walletFixedNotice: 'La billetera está fija: los pastores la aprobaron.',
+  walletFixedNotice: 'La billetera está fija: el iniciador la aprobó y los otros pastores ya pueden aprobarla.',
   gdMissingNoPastor: 'sin pastor principal registrado',
   gdMissingActive: 'el clúster debe estar activo',
   gdMissingMembers: 'al menos 3 iglesias',
@@ -282,6 +290,8 @@ interface ClusterData {
   status: string
   cluster_wallet: string | null
   isInitiator?: boolean
+  /** Estado de la presentación (REQ/161 §4.7): la página ordena las tarjetas por él. */
+  gd_status?: string | null
   members: ClusterMember[]
   history: ClusterHistory[]
   funds?: {
@@ -338,6 +348,7 @@ interface PresentationView {
     all_approved: boolean
     voters: number[]
   } | null
+  wallet_initiator_approved?: boolean
   request: PresentationRequestView | null
 }
 
@@ -396,6 +407,12 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
 
   const isAuthenticated = !!(address && session?.address && address.toLowerCase() === session.address.toLowerCase())
   const isInitiator = !!cluster?.isInitiator
+  // El fondo del clúster existe desde que los pastores aprueban la billetera y hasta que
+  // se libera (REQ/161 §4.7): antes de eso no hay saldo ni donaciones que mostrar.
+  const fundOpen = !!cluster
+    && !cluster.release
+    && ['wallet_approved', 'waiting_for_budget', 'waiting_for_pd_job_offer', 'requested', 'under_review', 'returned', 'sent']
+      .includes(String(cluster.gd_status ?? ''))
   const viewer = address ? `?walletAddress=${encodeURIComponent(address)}` : ''
 
   const fetchCluster = useCallback(() => {
@@ -865,50 +882,15 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
       {/* 3. Invitaciones: los dos caminos (referidos y billetera). */}
       {invitationsCard}
 
-      {/* 4. Balances de los fondos y donaciones: lo que el clúster ha levantado. */}
-      <section className={card}>
-        <h2 className={cardTitle}>{t('clusterFundBalance')}</h2>
-        {cluster.funds?.cluster ? (
-          <p className="text-sm text-gray-700 font-semibold">
-            {cluster.funds.cluster.usdt} USDT · {cluster.funds.cluster.slearn} SLEARN
-          </p>
-        ) : (
-          <p className="text-xs text-gray-500">{t('notAvailable')}</p>
-        )}
-      </section>
-
-      <section className={card}>
-        <h2 className={cardTitle}>{t('countryFundBalance')}</h2>
-        {cluster.funds?.country ? (
-          <p className="text-sm text-gray-700 font-semibold">
-            {cluster.funds.country.usdt} USDT · {cluster.funds.country.slearn} SLEARN
-          </p>
-        ) : (
-          <p className="text-xs text-gray-500">{t('notAvailable')}</p>
-        )}
-        {cluster.country_name && <p className="text-xs text-gray-500 mt-1">{cluster.country_name}</p>}
-      </section>
-
-      <section className={card}>
-        <h2 className={cardTitle}>{t('donationsTitle')}</h2>
-        <p className="text-sm text-gray-700 font-semibold">
-          {Number(cluster.donations?.usdt_total ?? 0).toFixed(2)} USDT ·{' '}
-          {Number(cluster.donations?.slearn_total ?? 0).toFixed(2)} SLEARN
-        </p>
-        <p className="text-xs text-gray-500">
-          {cluster.donations?.count ?? 0} {t('donationsLabel')}
-        </p>
-      </section>
-
-      {complete && (
-        <>
-      {/* 5. Billetera del clúster. */}
+      {/* 4. Billetera del clúster: primer paso después de formarlo; con la aprobación
+          de los pastores el fondo existe y la billetera queda fija (REQ/161 §4.7). */}
           <section className={card}>
             <h2 className={cardTitle}>{t('clusterWallet')}</h2>
             <div className="flex items-center justify-between gap-2 mb-1">
               {/* La billetera aprobada por los pastores queda fija (REQ/161 §4.7): se
                   edita sólo mientras el clúster se está formando. */}
-              {cluster.isInitiator && !editingWallet && !(presentation?.wallet_approvals?.all_approved) ? (
+              {cluster.isInitiator && !editingWallet
+                && (presentation?.wallet_approvals?.approved ?? 0) === 0 ? (
                 <button
                   type="button"
                   onClick={() => { setEditingWallet(true); setNewWallet(cluster.cluster_wallet || '') }}
@@ -957,30 +939,75 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
                 fondo del clúster existe y la billetera queda fija. */}
             {cluster.cluster_wallet && presentation?.wallet_approvals && (
               <div className="mt-2 border-t border-gray-200 pt-2">
+                <h3 className="text-xs font-semibold text-gray-900 mb-1">{t('walletApprovalsTitle')}</h3>
                 <p className="text-xs text-gray-600">
                   {t('walletApprovals')
                     .replace('{{0}}', String(presentation.wallet_approvals.approved))
                     .replace('{{1}}', String(presentation.wallet_approvals.pastors))}
                 </p>
-                {presentation.wallet_approvals.all_approved ? (
-                  <p className="text-xs text-green-700 mt-1">{t('walletFixedNotice')}</p>
+                {!presentation.wallet_initiator_approved ? (
+                  <p className="text-xs text-gray-500 mt-1">{t('walletInitiatorFirst')}</p>
                 ) : (
-                  presentation.isMember && (
-                    <deps.Button
-                      size="sm"
-                      className="mt-2"
-                      disabled={approvingWallet}
-                      onClick={() => handleApproveWallet()}
-                    >
-                      {t('walletApproveButton')}
-                    </deps.Button>
-                  )
+                  <>
+                    <p className="text-xs text-green-700 mt-1">{t('walletFixedNotice')}</p>
+                    {!presentation.wallet_approvals.all_approved && presentation.isMember && (
+                      <deps.Button
+                        size="sm"
+                        className="mt-2"
+                        disabled={approvingWallet}
+                        onClick={() => handleApproveWallet()}
+                      >
+                        {t('walletApproveButton')}
+                      </deps.Button>
+                    )}
+                  </>
                 )}
               </div>
             )}
             <p className="text-xs text-gray-500 mt-2">{t('walletHint')}</p>
           </section>
 
+      {/* 5. Balances de los fondos y donaciones: el fondo del clúster existe desde que
+          los pastores aprueban la billetera (REQ/161 §4.7). */}
+      <section className={card}>
+        <h2 className={cardTitle}>{t('clusterFundBalance')}</h2>
+        {!fundOpen ? (
+          <p className="text-xs text-gray-500">{t('fundNotOpen')}</p>
+        ) : cluster.funds?.cluster ? (
+          <p className="text-sm text-gray-700 font-semibold">
+            {cluster.funds.cluster.usdt} USDT · {cluster.funds.cluster.slearn} SLEARN
+          </p>
+        ) : (
+          <p className="text-xs text-gray-500">{t('notAvailable')}</p>
+        )}
+      </section>
+
+      <section className={card}>
+        <h2 className={cardTitle}>{t('countryFundBalance')}</h2>
+        {cluster.funds?.country ? (
+          <p className="text-sm text-gray-700 font-semibold">
+            {cluster.funds.country.usdt} USDT · {cluster.funds.country.slearn} SLEARN
+          </p>
+        ) : (
+          <p className="text-xs text-gray-500">{t('notAvailable')}</p>
+        )}
+        {cluster.country_name && <p className="text-xs text-gray-500 mt-1">{cluster.country_name}</p>}
+      </section>
+
+      <section className={card}>
+        <h2 className={cardTitle}>{t('donationsTitle')}</h2>
+        {!fundOpen && <p className="text-xs text-gray-500 mb-1">{t('donationsNotOpen')}</p>}
+        <p className="text-sm text-gray-700 font-semibold">
+          {Number(cluster.donations?.usdt_total ?? 0).toFixed(2)} USDT ·{' '}
+          {Number(cluster.donations?.slearn_total ?? 0).toFixed(2)} SLEARN
+        </p>
+        <p className="text-xs text-gray-500">
+          {cluster.donations?.count ?? 0} {t('donationsLabel')}
+        </p>
+      </section>
+
+      {complete && (
+        <>
           {/* 6. Presupuesto del cuarto año. */}
           <section className={card}>
             <h2 className={cardTitle}>{t('budgetTitle')}</h2>

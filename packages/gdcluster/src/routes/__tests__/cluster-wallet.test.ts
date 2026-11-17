@@ -37,6 +37,7 @@ const MEMBERSHIP = { clustergd_id: 3, joined_at: new Date(), left_at: null }
 const CLUSTER = {
   id: 3, name: 'Esperanza', slug: 'esp', country_id: 1,
   created_at: new Date(), initiator_church_id: 20, status: 'active', gd_status: 'forming',
+  wallet_fixed_at: null,
 }
 
 function buildDeps(overrides: Record<string, any> = {}): any {
@@ -87,6 +88,17 @@ describe('updateCluster — cluster wallet (R-#220)', () => {
     expect(json.cluster_wallet).toBe(getAddress(NEW))
     // members + wallets of the initiator + update clustergd + update church + history + userevent
     expect(mockExecute).toHaveBeenCalledTimes(6)
+  })
+
+  it('refuses to change the wallet once the initiator approved it (REQ/161 §4.7)', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce(CHURCH) // getPastorChurch
+      .mockResolvedValueOnce(MEMBERSHIP) // getChurchCluster
+      .mockResolvedValueOnce({ ...CLUSTER, wallet_fixed_at: new Date() }) // clustergd
+
+    const res = await updateCluster(buildDeps() as GdclusterDeps, patch(3, { walletAddress: WALLET, clusterWallet: NEW }), { id: '3' })
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe('gd_fields_locked')
   })
 
   it('clears the wallet when the leader sends an empty value', async () => {

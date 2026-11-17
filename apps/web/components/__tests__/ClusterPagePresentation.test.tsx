@@ -93,13 +93,16 @@ describe('ClusterPage with an incomplete presentation', () => {
       expect(screen.getByText('Fourth year budget')).toBeInTheDocument()
     })
     const headings = Array.from(container.querySelectorAll('h2')).map((h) => h.textContent || '')
+    // El orden de las tarjetas sigue el orden de los estados (REQ/161 §4.7): la
+    // billetera va antes que los fondos, porque el fondo del clúster no existe hasta que
+    // los pastores la aprueban.
     const expected = [
       'Member Churches',
       'Invitations',
+      'Cluster wallet',
       'Cluster fund balance',
       'Country fund balance',
       'Donations to the cluster fund',
-      'Cluster wallet',
       'Fourth year budget',
       'Program Director',
       'Pastors approval',

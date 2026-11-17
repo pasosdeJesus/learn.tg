@@ -116,6 +116,8 @@ describe('approvePresentation — phase wallet (R-#161 §4.7)', () => {
     mockExecuteTakeFirst
       .mockResolvedValueOnce({ ...CLUSTER }) // clustergd
       .mockResolvedValueOnce({ cluster_wallet: CLUSTER_WALLET }) // iglesia iniciadora
+      .mockResolvedValueOnce({ id: 5 }) // pastor iniciador (regla del primero)
+      .mockResolvedValueOnce({ id: 5 }) // pastor iniciador al fijar la billetera
       .mockResolvedValueOnce({ numUpdatedRows: 1n }) // update a wallet_approved
       .mockResolvedValueOnce({ gd_status: 'wallet_approved' }) // estado final
     mockExecute.mockResolvedValue([])
@@ -126,6 +128,31 @@ describe('approvePresentation — phase wallet (R-#161 §4.7)', () => {
     expect(json.phase).toBe('wallet')
     expect(json.status).toBe('wallet_approved')
     expect(json.wallet_approvals.all_approved).toBe(true)
+  })
+
+  it('does not let another pastor approve before the initiator', async () => {
+    // El pastor 6 es de otra iglesia del clúster; el iniciador (5) todavía no aprobó.
+    ;(await import('../../lib/cluster-pastors.js') as any)
+    const pastors = await import('../../lib/cluster-pastors.js')
+    ;(pastors.getClusterPastors as any).mockResolvedValueOnce([{ usuario_id: 5, church_id: 20 }, { usuario_id: 6, church_id: 21 }])
+    const deps = buildDeps()
+    deps.authenticateUser = vi.fn().mockResolvedValue({
+      usuario: { id: 6, church_id: 21, nombre: 'Pastor B', church_relationship: 'pastor' },
+      billetera: { billetera: WALLET },
+    })
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ ...CLUSTER }) // clustergd
+      .mockResolvedValueOnce({ cluster_wallet: CLUSTER_WALLET }) // iglesia iniciadora
+      .mockResolvedValueOnce({ id: 5 }) // pastor iniciador
+    mockExecute.mockResolvedValue([]) // nadie más aprobó todavía
+
+    const res = await approvePresentation(
+      deps as GdclusterDeps,
+      post('/api/cluster/3/approval?phase=wallet', { walletAddress: WALLET, phase: 'wallet' }),
+      { id: '3' },
+    )
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe('initiator_must_approve_first')
   })
 
   it('refuses a wallet approval once the wallet is fixed', async () => {

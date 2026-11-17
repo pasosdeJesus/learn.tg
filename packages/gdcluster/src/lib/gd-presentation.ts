@@ -166,6 +166,12 @@ export interface PresentationReadiness {
   approvals: ClusterApprovals
   /** Aprobaciones de los pastores para la billetera (fase `wallet`). */
   wallet_approvals: ClusterApprovals
+  /**
+   * El iniciador ya aprobó la billetera: desde ese momento la billetera queda fija y
+   * los demás pastores pueden aprobarla (REQ/161 §4.7). El pastor principal de la
+   * iglesia iniciadora aprueba primero.
+   */
+  wallet_initiator_approved: boolean
   request: PresentationRequest | null
 }
 
@@ -434,6 +440,19 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
   if (!approvalSummary.wallet.all_approved) missing.push('wallet_approvals')
   if (!approvals.all_approved) missing.push('approvals')
 
+  // El iniciador aprueba primero: mientras no lo haga, la billetera se puede editar y
+  // los demás pastores esperan (REQ/161 §4.7).
+  const initiatorPastor = cluster.initiator_church_id
+    ? await db
+        .selectFrom('usuario')
+        .select('id')
+        .where('church_id', '=', cluster.initiator_church_id)
+        .where('church_relationship', '=', 'pastor')
+        .executeTakeFirst()
+    : null
+  const walletInitiatorApproved = !!initiatorPastor
+    && approvalSummary.wallet.voters.includes(Number(initiatorPastor.id))
+
   const request: PresentationRequest = {
     status: (cluster.gd_status as GdPresentationStatus | null) ?? null,
     locked: presentationFieldsLocked(cluster.gd_status),
@@ -470,6 +489,7 @@ export async function getPresentationReadiness(db: any, clusterId: number): Prom
     wallet,
     approvals,
     wallet_approvals: approvalSummary.wallet,
+    wallet_initiator_approved: walletInitiatorApproved,
     request:
       request.requested_at ||
       request.status ||

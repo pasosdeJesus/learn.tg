@@ -284,6 +284,7 @@ export async function getCluster(
       initiator_church_id: cluster.initiator_church_id,
       cluster_wallet: clusterWallet,
       isInitiator,
+      gd_status: cluster.gd_status ?? 'forming',
       member_count: members.length,
       status: cluster.status ?? (members.length >= 3 ? 'active' : 'pending'),
       members: membersWithIndicators,
@@ -367,15 +368,21 @@ export async function updateCluster(
     let normalizedWallet: string | null | undefined
     let walletChecksummed = true
     let initiatorChurch: { id: number; cluster_wallet: string | null } | undefined
-    if (clusterWallet !== undefined && cluster.gd_status !== 'forming' && cluster.gd_status !== 'cancelled') {
-      return NextResponse.json(
-        {
-          error:
-            'The cluster wallet is fixed: it was approved by the pastors. A change needs support to edit it directly.',
-          code: 'gd_fields_locked',
-        },
-        { status: 409 },
-      )
+    if (clusterWallet !== undefined) {
+      // La billetera queda fija desde la aprobación del iniciador (REQ/161 §4.7): antes
+      // de eso sólo se puede editar mientras el clúster se forma y nadie la haya
+      // aprobado; después, el cambio lo hace soporte en la base.
+      const status = String(cluster.gd_status ?? 'forming')
+      if (cluster.wallet_fixed_at || (status !== 'forming' && status !== 'cancelled')) {
+        return NextResponse.json(
+          {
+            error:
+              'The cluster wallet is fixed: the initiator approved it, so only support can change it (editing the database directly).',
+            code: 'gd_fields_locked',
+          },
+          { status: 409 },
+        )
+      }
     }
     if (clusterWallet !== undefined) {
       if (clusterWallet === null || clusterWallet === '') {

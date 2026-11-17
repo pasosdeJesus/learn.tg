@@ -3,6 +3,7 @@ import { addClusterHistory, getPastorChurch, getChurchCluster } from '../lib/gd-
 import { getClusterPastors } from '../lib/cluster-pastors.js'
 import {
   getClusterApprovalSummary,
+  getClusterApprovals,
   presentationDataHash,
   walletHash,
   type ApprovalPhase,
@@ -24,6 +25,22 @@ import type { GdclusterDeps } from '../index.js'
 // - `data`: los tres pastores aprueban los cinco datos que se envían a GD. Con la
 //   tercera aprobación el clúster pasa a `requested` (esa aprobación *es* la solicitud
 //   a pdJ) y se comprueban las condiciones y que el fondo tenga dinero.
+
+/**
+ * Pastor principal de la iglesia iniciadora: es quien aprueba la billetera primero
+ * (REQ/161 §4.7). Mientras no lo haga, nadie más puede aprobarla y la billetera sigue
+ * siendo editable; desde su aprobación queda fija.
+ */
+async function initiatorPastorId(db: any, cluster: any): Promise<number | null> {
+  if (!cluster.initiator_church_id) return null
+  const row = await db
+    .selectFrom('usuario')
+    .select('id')
+    .where('church_id', '=', cluster.initiator_church_id)
+    .where('church_relationship', '=', 'pastor')
+    .executeTakeFirst()
+  return row?.id != null ? Number(row.id) : null
+}
 
 async function clusterWallet(db: any, cluster: any): Promise<string | null> {
   if (!cluster.initiator_church_id) return null
@@ -122,6 +139,25 @@ export async function approvePresentation(
 
     const wallet = await clusterWallet(db, cluster)
     const hash = phase === 'wallet' ? walletHash(wallet) : presentationDataHash(cluster)
+
+    // La billetera la aprueba primero el iniciador, y desde su aprobación queda fija:
+    // los demás pastores sólo pueden aprobar después (REQ/161 §4.7).
+    if (phase === 'wallet') {
+      const initiatorId = await initiatorPastorId(db, cluster)
+      const current = await getClusterApprovals(db, clusterId, hash, 'wallet')
+      const initiatorApproved = initiatorId != null && current.voters.includes(initiatorId)
+      const isInitiatorPastor = initiatorId != null && initiatorId === Number(auth.usuario.id)
+      if (!initiatorApproved && !isInitiatorPastor) {
+        return NextResponse.json(
+          {
+            error:
+              'The initiator pastor approves the cluster wallet first: until then the wallet can still change, so there is nothing for the other pastors to approve',
+            code: 'initiator_must_approve_first',
+          },
+          { status: 409 },
+        )
+      }
+    }
     await db
       .insertInto('cluster_gd_approval')
       .values({
@@ -149,6 +185,19 @@ export async function approvePresentation(
     })
 
     // La última aprobación mueve el estado (REQ/161 §4.7).
+    // La aprobación del iniciador fija la billetera (REQ/161 §4.7).
+    if (phase === 'wallet' && summary.wallet.voters.length > 0 && !cluster.wallet_fixed_at) {
+      const initiatorId = await initiatorPastorId(db, cluster)
+      if (initiatorId != null && summary.wallet.voters.includes(initiatorId)) {
+        await db
+          .updateTable('clustergd')
+          .set({ wallet_fixed_at: new Date(), updated_at: new Date() })
+          .where('id', '=', clusterId)
+          .where('wallet_fixed_at', 'is', null)
+          .execute()
+      }
+    }
+
     if (approvals.all_approved && phase === 'wallet' && status === 'forming') {
       const now = new Date()
       await db

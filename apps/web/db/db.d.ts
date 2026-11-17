@@ -159,6 +159,7 @@ export interface Clustergd {
   slug: string;
   status: Generated<string>;
   updated_at: Generated<Timestamp | null>;
+  wallet_fixed_at: Timestamp | null;
 }
 
 export interface ClusterGdApproval {

@@ -63,12 +63,13 @@ refusal without an explanation is a silent failure (2026-11-05).
 ### D5 — One private page, one card per step
 
 `/{lang}/cluster` is the only private page (R-#299): the pastor belongs to one cluster, so the
-`id` adds nothing. It is a stack of cards in the order the cluster actually advances —
-name/status/public alias, **Member Churches** (each row with its members in learn.tg and its
-pastor's referrals; `Leave cluster` at the end of the same card), **Invitations** (referred pastors
-and by wallet), **Cluster fund balance**, **Country fund balance** and **Donations to the cluster
-fund** (`getClusterFunds`, `getCountryFunds` and the `transaction` aggregate — the fund-raising
-indicators), **Cluster wallet**, **Fourth year budget** (`clustergd.fourth_year_budget`: Global
+`id` adds nothing. It is a stack of cards in the order of the states of D6 — name/status/public
+alias, **Member Churches** (each row with its members in learn.tg and its pastor's referrals;
+`Leave cluster` at the end of the same card), **Invitations** (referred pastors and by wallet),
+**Cluster wallet** (the address plus the `wallet` approval of the pastors — the fund does not exist
+before it), **Cluster fund balance**, **Country fund balance** and **Donations to the cluster fund**
+(`getClusterFunds`, `getCountryFunds` and the `transaction` aggregate — the fund-raising indicators,
+with a "not created yet" line while the fund is closed), **Fourth year budget** (`clustergd.fourth_year_budget`: Global
 Disciples funds the first three years, so the plan that matters is year 4), **Program Director**,
 **Pastors approval**, **Present to Global Disciples** and **History**. `GET /api/cluster/[id]`
 carries `funds { cluster, country }`, `donations { count, usdt_total, slearn_total }` and, per
@@ -83,8 +84,10 @@ control (2026-11-13).
 ### D6 — Two approval phases, and the fund opens with the wallet one
 
 The pastors approve twice, each phase with its own SHA-256 (`lib/cluster-approvals.ts`,
-REQ/161 §4.7). Phase **`wallet`** covers `church.cluster_wallet` of the initiator church: the third
-approval moves the cluster to `wallet_approved`, fixes the wallet and makes the cluster fund exist —
+REQ/161 §4.7). Phase **`wallet`** covers `church.cluster_wallet` of the initiator church: the **initiator approves
+first** and that stamps `wallet_fixed_at` (the address can no longer change; the other pastors get
+`409 initiator_must_approve_first` until then), and the third approval moves the cluster to
+`wallet_approved` and makes the cluster fund exist —
 until then the 10 % of purchases and scholarships goes to the country fund, `donation_wallet` is
 `null` and no church can join or leave (`409 cluster_membership_locked`). Phase **`data`** covers
 the five fields sent to GD and is only open in `waiting_for_pd_job_offer` and `returned`; the third

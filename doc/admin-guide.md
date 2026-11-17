@@ -134,14 +134,16 @@ search box (name or alias) and two filters: status and country.
 of GD purchases and guide scholarships is routed to) is configured by the **cluster
 initiator** on the cluster page (`/{lang}/cluster`, the single private page since R-#299),
 which recommends a multisig wallet shared by the cluster's pastors. The verifier can correct it
-in the church modal (*Cluster wallet*) **while the cluster is `forming`**; from the moment the
-pastors approve it (`wallet_approved`) the API answers `409 gd_fields_locked` to the initiator and
-to the verifier, and the church modal disables the field. A real emergency (a compromised wallet)
+in the church modal (*Cluster wallet*) **while the cluster is `forming` and nobody approved it
+yet**; from the initiator's approval (`wallet_fixed_at`) the API answers `409 gd_fields_locked` to
+the initiator and to the verifier, and the church modal disables the field. A real emergency (a compromised wallet)
 is solved by support, editing the database directly — never from the panel.
 
-**The pastors approve the wallet, and that opens the fund.** The three principal pastors approve
-it in the *Cluster wallet* card (phase `wallet` of `GET|POST /api/cluster/[id]/approval`); with the
-third approval the cluster moves to `wallet_approved`, the wallet is fixed and the cluster fund
+**The pastors approve the wallet, and that opens the fund.** In the *Cluster wallet* card, under
+*Pastors approval for the cluster wallet* (phase `wallet` of
+`GET|POST /api/cluster/[id]/approval`), the **initiator approves first** — that approval fixes the
+address, and only then can the other two approve (`409 initiator_must_approve_first` otherwise).
+With the third approval the cluster moves to `wallet_approved` and the cluster fund
 starts existing — before that the 10% goes to the country fund and the Donate button does not
 appear. Then the initiator uploads the fourth-year budget (`waiting_for_budget`) and the director's
 offer (`waiting_for_pd_job_offer`), and the pastors approve the five data (phase `data`): with the
