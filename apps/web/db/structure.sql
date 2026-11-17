@@ -1972,8 +1972,8 @@ CREATE TABLE public.clustergd (
     fund_released_at timestamp with time zone,
     fund_released_amount numeric(14,2),
     fund_released_slearn numeric(14,2),
-    wallet_fixed_at timestamp with time zone,
     slug character varying(120) NOT NULL,
+    wallet_fixed_at timestamp with time zone,
     CONSTRAINT clustergd_gd_status_check CHECK (((gd_status)::text = ANY ((ARRAY['forming'::character varying, 'wallet_approved'::character varying, 'waiting_for_budget'::character varying, 'waiting_for_pd_job_offer'::character varying, 'requested'::character varying, 'under_review'::character varying, 'returned'::character varying, 'sent'::character varying, 'answered'::character varying, 'cancelled'::character varying])::text[])))
 );
 
