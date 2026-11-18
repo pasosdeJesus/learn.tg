@@ -32,6 +32,17 @@ const tEn = {
   cancel: 'Cancel',
   pendingChurches: 'Invite two more churches; with three you can complete the budget, the director offer and the approvals.',
   memberChurches: 'Member Churches',
+  countryLabel: 'Country',
+  gdStateForming: 'Forming the cluster',
+  gdStateWallet: 'Wallet approved',
+  gdStateBudget: 'Waiting for the budget',
+  gdStateDirector: 'Waiting for the director offer',
+  gdStateRequested: 'Requested to pdJ',
+  gdStateReview: 'pdJ is reviewing',
+  gdStateReturned: 'Returned by pdJ',
+  gdStateSent: 'Sent to Global Disciples',
+  gdStateAnswered: 'Global Disciples answered',
+  gdStateCancelled: 'Presentation cancelled',
   invitations: 'Invitations',
   clusterFundBalance: 'Cluster fund balance',
   countryFundBalance: 'Country fund balance',
@@ -102,6 +113,10 @@ const tEn = {
   walletApprovalsTitle: 'Pastors approval for the cluster wallet',
   walletApprovals: '{{0}} of {{1}} pastors approved the wallet',
   walletInitiatorFirst: 'The initiator approves the wallet first: until then it can still change.',
+  walletInitiatorSets: 'The initiator sets the wallet.',
+  budgetLocked: 'Locked until the three pastors approve the wallet.',
+  directorLocked: 'Locked until the fourth-year budget is saved (total and PDF).',
+  approvalsLocked: 'Opens when the budget and the director offer are complete.',
   walletApproveButton: 'I know and approve this cluster wallet',
   walletApprovedNotice: 'Your approval of the wallet is recorded',
   walletFixedNotice: 'The wallet is fixed: the initiator approved it, and the other pastors can approve it now.',
@@ -123,6 +138,17 @@ const tEs: typeof tEn = {
   cancel: 'Cancelar',
   pendingChurches: 'Invita dos iglesias más; con tres podrás completar el presupuesto, la oferta del director y las aprobaciones.',
   memberChurches: 'Iglesias Miembros',
+  countryLabel: 'País',
+  gdStateForming: 'Formando el clúster',
+  gdStateWallet: 'Billetera aprobada',
+  gdStateBudget: 'Esperando el presupuesto',
+  gdStateDirector: 'Esperando la oferta del director',
+  gdStateRequested: 'Solicitado a pdJ',
+  gdStateReview: 'pdJ está revisando',
+  gdStateReturned: 'Devuelto por pdJ',
+  gdStateSent: 'Enviado a Global Disciples',
+  gdStateAnswered: 'Global Disciples respondió',
+  gdStateCancelled: 'Presentación cancelada',
   invitations: 'Invitaciones',
   clusterFundBalance: 'Balance del fondo del clúster',
   countryFundBalance: 'Balance del fondo del país',
@@ -189,6 +215,10 @@ const tEs: typeof tEn = {
   walletApprovalsTitle: 'Aprobación de los pastores de la billetera del clúster',
   walletApprovals: '{{0}} de {{1}} pastores aprobaron la billetera',
   walletInitiatorFirst: 'El iniciador aprueba la billetera primero: hasta entonces todavía puede cambiar.',
+  walletInitiatorSets: 'El iniciador configura la billetera.',
+  budgetLocked: 'Bloqueado hasta que los tres pastores aprueben la billetera.',
+  directorLocked: 'Bloqueado hasta que el presupuesto del cuarto año esté guardado (total y PDF).',
+  approvalsLocked: 'Se abre cuando el presupuesto y la oferta del director están completos.',
   walletApproveButton: 'Conozco y apruebo esta billetera del clúster',
   walletApprovedNotice: 'Tu aprobación de la billetera quedó registrada',
   walletFixedNotice: 'La billetera está fija: el iniciador la aprobó y los otros pastores ya pueden aprobarla.',
@@ -359,6 +389,15 @@ const PASTOR_MISSING: Record<string, keyof typeof tEn> = {
   invite_member: 'gdMissingInviteMember',
   no_pastor: 'gdMissingNoPastor',
 }
+// Condiciones por pastor del listado de Global Disciples (REQ/161 §4.2), una marca por
+// condición para que la lista se lea de un vistazo; el detalle va en el `title`.
+const PASTOR_CHECKS: [string, keyof typeof tEn][] = [
+  ['course', 'gdMissingCourse'],
+  ['score', 'gdMissingScore'],
+  ['invite_pastor', 'gdMissingInvitePastor'],
+  ['invite_member', 'gdMissingInviteMember'],
+]
+
 const CLUSTER_MISSING: Record<string, keyof typeof tEn> = {
   cluster_active: 'gdMissingActive',
   cluster_members: 'gdMissingMembers',
@@ -766,6 +805,32 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
     </section>
   )
 
+  // Las tarjetas de datos se abren una tras otra, en el orden de los estados (REQ/161
+  // §4.7): billetera aprobada → presupuesto → oferta del director → aprobación de datos.
+  const walletApproved = !!presentation?.wallet_approvals?.all_approved
+  const requestView = presentation?.request
+  const budgetComplete = Number(requestView?.fourth_year_budget ?? 0) > 0
+    && !!requestView?.budget_draft_path
+  const directorComplete = budgetComplete
+    && !!requestView?.director_offer_path
+    && Number(requestView?.director_first_year_pay ?? 0) > 0
+    && Number(requestView?.director_first_year_hours ?? 0) > 0
+
+  const gdStateLabel = (status: string | null | undefined): string => {
+    switch (String(status ?? 'forming')) {
+      case 'wallet_approved': return `🔑 ${t('gdStateWallet')}`
+      case 'waiting_for_budget': return `📄 ${t('gdStateBudget')}`
+      case 'waiting_for_pd_job_offer': return `📄 ${t('gdStateDirector')}`
+      case 'requested': return `📨 ${t('gdStateRequested')}`
+      case 'under_review': return `🔎 ${t('gdStateReview')}`
+      case 'returned': return `↩️ ${t('gdStateReturned')}`
+      case 'sent': return `🌍 ${t('gdStateSent')}`
+      case 'answered': return `✅ ${t('gdStateAnswered')}`
+      case 'cancelled': return `🚫 ${t('gdStateCancelled')}`
+      default: return `🌱 ${t('gdStateForming')}`
+    }
+  }
+
   const panel = (section: 'budget' | 'director' | 'approvals' | 'cancel') =>
     isAuthenticated && presentation && (presentation.isInitiator || presentation.isMember) ? (
       <ClusterPresentationPanel
@@ -796,6 +861,9 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
               {' · '}
               {cluster.member_count} {t('churches')}
             </p>
+            {/* Estado de la presentación (REQ/161 §4.7): el proceso se ve aquí, no sólo
+                cuando ya se solicitó. */}
+            <p className="text-xs text-gray-600 mt-1">{gdStateLabel(cluster.gd_status)}</p>
           </div>
           {isAuthenticated && isInitiator && (
             <deps.Button variant="outline" size="sm" onClick={() => { setEditingSlug(!editingSlug); setNewSlug(cluster.slug) }}>
@@ -849,12 +917,17 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
       {/* 2. Iglesias miembros, con la salida del clúster al final de la misma tarjeta. */}
       <section className={card}>
         <h2 className={cardTitle}>{t('memberChurches')} ({cluster.members.length})</h2>
+        {/* El clúster es de un solo país (REQ/161 §4): va primero, como contexto de las
+            iglesias que lo forman. */}
+        <p className="text-xs text-gray-600 mb-3">
+          {t('countryLabel')}: <span className="font-medium text-gray-800">{cluster.country_name ?? cluster.country_id}</span>
+        </p>
         <ul className="space-y-3">
           {cluster.members.map((m) => (
             <li key={m.church_id} className="text-sm">
               <div className="flex items-center justify-between">
                 <Link
-                  href={`/${lang}/church/${m.church_id}`}
+                  href={`/${lang}/directory/churches/${m.church_id}`}
                   className="text-blue-600 hover:underline"
                 >
                   {m.church_name}
@@ -900,7 +973,7 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
                 </button>
               ) : null}
             </div>
-            {editingWallet ? (
+            {editingWallet || (!cluster.cluster_wallet && cluster.isInitiator) ? (
               <div className="flex flex-col gap-2">
                 <input
                   type="text"
@@ -933,11 +1006,14 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
                 </button>
               </div>
             ) : (
-              <p className="text-xs text-gray-500">{t('notConfigured')}</p>
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-gray-500">{t('notConfigured')}</p>
+                {!cluster.isInitiator && <p className="text-xs text-gray-500">{t('walletInitiatorSets')}</p>}
+              </div>
             )}
             {/* Aprobación de la billetera (REQ/161 §4.7): con la tercera aprobación el
                 fondo del clúster existe y la billetera queda fija. */}
-            {cluster.cluster_wallet && presentation?.wallet_approvals && (
+            {presentation?.wallet_approvals && (
               <div className="mt-2 border-t border-gray-200 pt-2">
                 <h3 className="text-xs font-semibold text-gray-900 mb-1">{t('walletApprovalsTitle')}</h3>
                 <p className="text-xs text-gray-600">
@@ -945,7 +1021,9 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
                     .replace('{{0}}', String(presentation.wallet_approvals.approved))
                     .replace('{{1}}', String(presentation.wallet_approvals.pastors))}
                 </p>
-                {!presentation.wallet_initiator_approved ? (
+                {!cluster.cluster_wallet ? (
+                  <p className="text-xs text-gray-500 mt-1">{t('walletInitiatorSets')}</p>
+                ) : !presentation.wallet_initiator_approved ? (
                   <p className="text-xs text-gray-500 mt-1">{t('walletInitiatorFirst')}</p>
                 ) : (
                   <>
@@ -1011,19 +1089,20 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
           {/* 6. Presupuesto del cuarto año. */}
           <section className={card}>
             <h2 className={cardTitle}>{t('budgetTitle')}</h2>
-            {panel('budget')}
+            {walletApproved ? panel('budget') : <p className="text-xs text-gray-500">{t('budgetLocked')}</p>}
           </section>
 
           {/* 7. Director del programa. */}
           <section className={card}>
             <h2 className={cardTitle}>{t('directorTitle')}</h2>
-            {panel('director')}
+            {budgetComplete ? panel('director') : <p className="text-xs text-gray-500">{t('directorLocked')}</p>}
           </section>
 
-          {/* 8. Aprobación de los pastores. */}
+          {/* 8. Aprobación de los pastores (sólo los datos: la billetera se aprueba en su
+              propia tarjeta). */}
           <section className={card}>
             <h2 className={cardTitle}>{t('approvalsTitle')}</h2>
-            {panel('approvals')}
+            {directorComplete ? panel('approvals') : <p className="text-xs text-gray-500">{t('approvalsLocked')}</p>}
           </section>
 
           {/* 9. Presentación a Global Disciples. */}
@@ -1033,16 +1112,32 @@ export function ClusterPage({ lang, id, deps }: { lang: string; id?: string; dep
               <p className="text-xs text-gray-600 mb-2">{t('gdIntro')}</p>
               {presentation.pastors.length > 0 && (
                 <ul className="text-xs space-y-1 mb-2">
+                  <li className="flex flex-wrap items-baseline justify-between gap-x-2 text-gray-500">
+                    <span />
+                    {/* Leyenda: una marca por condición, el detalle va en el tooltip. */}
+                    <span className="flex gap-2">
+                      {PASTOR_CHECKS.map(([key, label]) => (
+                        <span key={key} title={t(label)}>
+                          {key === 'course' ? '📘' : key === 'score' ? '📊' : key === 'invite_pastor' ? '👤' : '🏠'}
+                        </span>
+                      ))}
+                    </span>
+                  </li>
                   {presentation.pastors.map((pastor, i) => (
                     <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
                       <span className="min-w-0 break-words">
                         {pastor.church_name}
                         {pastor.nombre ? ` · ${pastor.nombre}` : ''}
                       </span>
-                      <span className={`min-w-0 break-words text-right ${pastor.missing.length ? 'text-amber-700' : 'text-green-700'}`}>
-                        {pastor.missing.length
-                          ? pastor.missing.map((key) => t(PASTOR_MISSING[key] ?? 'gdMissingCourse')).join(', ')
-                          : t('gdOk')}
+                      <span className={`flex gap-2 text-right ${pastor.missing.length ? 'text-amber-700' : 'text-green-700'}`}>
+                        {PASTOR_CHECKS.map(([key, label]) => {
+                          const missing = pastor.missing.includes(key)
+                          return (
+                            <span key={key} title={`${t(label)}${missing ? ' ❌' : ' ✅'}`}>
+                              {missing ? '❌' : '✅'}
+                            </span>
+                          )
+                        })}
                       </span>
                     </li>
                   ))}
