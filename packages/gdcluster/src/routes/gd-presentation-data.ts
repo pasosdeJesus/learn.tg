@@ -24,12 +24,12 @@ async function syncDataState(
   before: any,
   after: any,
   usuarioId: number,
-): Promise<void> {
+): Promise<string | null> {
   const status = String(before.gd_status ?? 'forming')
-  if (!DATA_STATES.includes(status)) return
+  if (!DATA_STATES.includes(status)) return null
   const budgetReady = Number(after.fourth_year_budget ?? 0) > 0 && !!after.budget_draft_path
   const next = budgetReady ? 'waiting_for_pd_job_offer' : 'waiting_for_budget'
-  if (next === status) return
+  if (next === status) return null
   try {
     await db
     .updateTable('clustergd')
@@ -41,8 +41,11 @@ async function syncDataState(
   } catch (error) {
     // Los datos ya quedaron guardados: un fallo al mover el estado se registra y se
     // sigue (la siguiente lectura lo vuelve a intentar con los datos completos).
-    console.error('gd data state sync failed:', error instanceof Error ? error.message : String(error))
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('gd data state sync failed:', message)
+    return message
   }
+  return null
 }
 
 interface Context {
@@ -118,9 +121,12 @@ export async function updateBudget(deps: GdclusterDeps, req: NextRequest, params
 
     await ctx.db.updateTable('clustergd').set(updates).where('id', '=', clusterId).execute()
     await addClusterHistory(ctx.db, clusterId, 'budget_updated', null, dateLabel(), ctx.usuarioId)
-    await syncDataState(ctx.db, clusterId, ctx.cluster, { ...ctx.cluster, ...updates }, ctx.usuarioId)
+    const stateError = await syncDataState(ctx.db, clusterId, ctx.cluster, { ...ctx.cluster, ...updates }, ctx.usuarioId)
+    const after = await ctx.db.selectFrom('clustergd').select('gd_status').where('id', '=', clusterId).executeTakeFirst()
     return NextResponse.json({
       success: true,
+      gd_status: after?.gd_status ?? null,
+      ...(stateError ? { state_sync_error: stateError } : {}),
       budget: {
         fourth_year_budget: updates.fourth_year_budget ?? ctx.cluster.fourth_year_budget ?? null,
         budget_draft_path: updates.budget_draft_path ?? ctx.cluster.budget_draft_path ?? null,
@@ -167,9 +173,12 @@ export async function updateDirector(deps: GdclusterDeps, req: NextRequest, para
 
     await ctx.db.updateTable('clustergd').set(updates).where('id', '=', clusterId).execute()
     await addClusterHistory(ctx.db, clusterId, 'director_updated', null, dateLabel(), ctx.usuarioId)
-    await syncDataState(ctx.db, clusterId, ctx.cluster, { ...ctx.cluster, ...updates }, ctx.usuarioId)
+    const stateError = await syncDataState(ctx.db, clusterId, ctx.cluster, { ...ctx.cluster, ...updates }, ctx.usuarioId)
+    const after = await ctx.db.selectFrom('clustergd').select('gd_status').where('id', '=', clusterId).executeTakeFirst()
     return NextResponse.json({
       success: true,
+      gd_status: after?.gd_status ?? null,
+      ...(stateError ? { state_sync_error: stateError } : {}),
       director: {
         director_offer_path: updates.director_offer_path ?? ctx.cluster.director_offer_path ?? null,
         director_first_year_pay: updates.director_first_year_pay ?? ctx.cluster.director_first_year_pay ?? null,

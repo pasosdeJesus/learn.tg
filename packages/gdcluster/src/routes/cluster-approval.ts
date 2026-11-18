@@ -125,7 +125,10 @@ export async function approvePresentation(
     }
     // Los datos se aprueban cuando están completos: antes no hay nada que aprobar y el
     // hash cambiaría con cada edición (REQ/161 §4.7).
-    if (phase === 'data' && !['waiting_for_pd_job_offer', 'returned'].includes(status)) {
+    // El estado de los datos es contabilidad: si los cinco ya están completos se puede
+    // aprobar aunque el estado no haya avanzado todavía (REQ/161 §4.7).
+    const dataComplete = missingPresentationData(cluster).length === 0
+    if (phase === 'data' && !['waiting_for_pd_job_offer', 'returned'].includes(status) && !dataComplete) {
       return NextResponse.json(
         {
           error:
@@ -210,7 +213,8 @@ export async function approvePresentation(
       await logEvent(db, auth.usuario.id, 'gd_wallet_approved', { cluster_id: clusterId })
     }
 
-    if (approvals.all_approved && phase === 'data' && ['waiting_for_pd_job_offer', 'returned'].includes(status)) {
+    if (approvals.all_approved && phase === 'data'
+      && (['waiting_for_pd_job_offer', 'returned'].includes(status) || missingPresentationData(cluster).length === 0)) {
       const blocked = await requestBlocker(deps, db, clusterId, cluster)
       if (blocked) return blocked
       const now = new Date()

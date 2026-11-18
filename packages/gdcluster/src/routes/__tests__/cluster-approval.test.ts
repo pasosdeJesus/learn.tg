@@ -188,12 +188,26 @@ describe('approvePresentation — phase data (R-#161 §4.7)', () => {
     expect(json.status).toBe('requested')
   })
 
-  it('refuses the data approval before the wallet is approved and the data are complete', async () => {
-    mockExecuteTakeFirst.mockResolvedValueOnce({ ...CLUSTER, gd_status: 'forming' })
+  it('refuses the data approval while the data are incomplete', async () => {
+    mockExecuteTakeFirst.mockResolvedValueOnce({ ...CLUSTER, gd_status: 'forming', fourth_year_budget: null })
 
     const res = await approve('data')
     expect(res.status).toBe(409)
     expect((await res.json()).code).toBe('data_approval_not_open')
+  })
+
+  it('accepts the data approval when the five data are complete even if the state lagged', async () => {
+    mockExecuteTakeFirst
+      .mockResolvedValueOnce({ ...CLUSTER, gd_status: 'waiting_for_budget' }) // clustergd
+      .mockResolvedValueOnce({ cluster_wallet: CLUSTER_WALLET }) // billetera del clúster
+      .mockResolvedValueOnce({ cluster_wallet: CLUSTER_WALLET }) // billetera (requestBlocker)
+      .mockResolvedValueOnce({ numUpdatedRows: 1n }) // update a requested
+      .mockResolvedValueOnce({ gd_status: 'requested' }) // estado final
+    mockExecute.mockResolvedValue([])
+
+    const res = await approve('data')
+    expect(res.status).toBe(200)
+    expect((await res.json()).status).toBe('requested')
   })
 
   it('keeps the approval but refuses the request when the fund has no money', async () => {
