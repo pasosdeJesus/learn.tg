@@ -203,42 +203,59 @@ export async function prepareReadyCluster({
         body: JSON.stringify({ walletAddress: session.pastor.address }),
       })
     }
+    // Invitar exige una iglesia **verificada**: la verificadora la confirma (igual que
+    // en cluster-three-pastors; sin esto la invitación responde 422 not_invitable).
+    const verified = await verifierApi(`/api/admin/church/${fixture.churchId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ registration_verified: true }),
+    })
+    if (verified.status !== 200) {
+      fail(`${session.pastor.variable}: no se pudo verificar la iglesia #${fixture.churchId} (${verified.status})`)
+    }
     session.fixture = fixture
     ok(`${session.pastor.variable}: perfil #${fixture.userId}, iglesia #${fixture.churchId}`)
   }
 
   // 2. Clúster activo con tres iglesias
+  // R-#299 quitó el código de 6 caracteres: la invitación es **por billetera** y se
+  // acepta desde la página del clúster, así que el fixture crea el clúster y las
+  // invitaciones por API (la interfaz de creación cambió con el alias sugerido).
   const name = `E2E Listo ${Date.now().toString(36)}`
   let clusterId = null
-  let code = null
   for (let attempt = 0; attempt < 2 && !clusterId; attempt++) {
-    await initiator.page.goto(`${base}/${lang}/cluster`, { waitUntil: 'domcontentloaded' })
-    await initiator.page.waitForFunction((label) => (document.body?.innerText || '').includes(label), { timeout: 60000 }, t.create).catch(() => {})
-    await clickButton(initiator.page, [t.create])
-    await initiator.page.waitForFunction((label) => (document.body?.innerText || '').includes(label), { timeout: 20000 }, t.name).catch(() => {})
-    await fillByLabel(initiator.page, t.name, name)
-    await clickButton(initiator.page, [t.create], true)
-    await new Promise((r) => setTimeout(r, 5000))
-    const status = await apiOn(initiator.page, `/api/cluster/status?walletAddress=${initiator.pastor.address}`)
-    clusterId = status.body?.clusterId || null
-    code = status.body?.cluster?.code || null
+    const created = await apiOn(initiator.page, '/api/cluster', {
+      method: 'POST',
+      body: JSON.stringify({ walletAddress: initiator.pastor.address, name: `${name}${attempt || ''}` }),
+    })
+    clusterId = created.body?.cluster?.id ?? created.body?.id ?? null
+    if (!clusterId && created.status === 409) {
+      // Una corrida anterior dejó el clúster abierto: la verificadora lo disuelve.
+      const status = await apiOn(initiator.page, `/api/cluster/status?walletAddress=${initiator.pastor.address}`)
+      if (status.body?.clusterId) {
+        const disbanded = await verifierApi(`/api/admin/clusters/${status.body.clusterId}`, { method: 'DELETE' })
+        if ([200, 204].includes(disbanded.status)) ok(`clúster previo #${status.body.clusterId} disuelto`)
+      }
+    }
   }
-  if (!clusterId) throw new Error('la interfaz no creó el clúster')
-  ok(`clúster #${clusterId} (${code})`)
+  if (!clusterId) throw new Error('no se pudo crear el clúster por API')
+  ok(`clúster #${clusterId}`)
 
   for (const session of sessions.slice(1)) {
-    let filled = false
-    for (let attempt = 0; attempt < 2 && !filled; attempt++) {
-      await session.page.goto(`${base}/${lang}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded' })
-      await session.page.waitForFunction(
-        (placeholder) => !!Array.from(document.querySelectorAll('input')).find((i) => (i.placeholder || '') === placeholder),
-        { timeout: 60000 },
-        t.code,
-      ).catch(() => {})
-      filled = await fillByLabel(session.page, t.code, code)
+    const invited = await apiOn(initiator.page, '/api/cluster/invitation/wallet', {
+      method: 'POST',
+      body: JSON.stringify({ walletAddress: initiator.pastor.address, invitedWallet: session.pastor.address }),
+    })
+    const list = await apiOn(session.page, `/api/cluster/invitations?walletAddress=${session.pastor.address}`)
+    const invitationId = (list.body?.invitations || [])[0]?.id
+    if (invited.status === 200 && invitationId) {
+      await apiOn(session.page, '/api/cluster/invitation/accept', {
+        method: 'POST',
+        body: JSON.stringify({ walletAddress: session.pastor.address, invitationId }),
+      })
+    } else {
+      fail(`${session.pastor.variable}: no se pudo invitar/aceptar (${invited.status} ${JSON.stringify(invited.body).slice(0, 120)})`)
     }
-    if (filled) await clickButton(session.page, [t.join])
-    await new Promise((r) => setTimeout(r, 3000))
+    await new Promise((r) => setTimeout(r, 1500))
   }
   const cluster = await apiOn(initiator.page, `/api/cluster/${clusterId}?walletAddress=${initiator.pastor.address}`)
   if (cluster.body?.members?.length === 3 && cluster.body?.status === 'active') ok('clúster activo con 3 iglesias')
@@ -279,27 +296,48 @@ export async function prepareReadyCluster({
     } else fail(`billetera del clúster → ${walletSet.status}`)
   }
 
-  await initiator.page.goto(`${base}/${lang}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded' })
-  await initiator.page.waitForFunction(() => document.querySelectorAll('input[type="number"]').length >= 3, { timeout: 45000 }).catch(() => {})
-  if (await fillNumbers(initiator.page, [400, 180, 40])) ok('valores del presupuesto y del director escritos')
-  else fail('no aparecieron los campos numéricos del panel')
-  await clickButton(initiator.page, t.save)
-  await new Promise((r) => setTimeout(r, 2500))
-  await fillNumbers(initiator.page, [400, 180, 40])
-  await clickButton(initiator.page, t.save, true)
-  await new Promise((r) => setTimeout(r, 2500))
-
-  const files = await initiator.page.$$('input[type=file]')
-  if (files.length >= 2) {
-    await files[0].uploadFile(PDF_PATH)
-    await new Promise((r) => setTimeout(r, 3000))
-    const again = await initiator.page.$$('input[type=file]')
-    if (again.length >= 2) await again[1].uploadFile(PDF_PATH)
-    await new Promise((r) => setTimeout(r, 3000))
-    ok('PDF de presupuesto y de oferta subidos')
-  } else {
-    fail('no aparecieron los campos de PDF')
+  // Fase `wallet` (REQ/161 §4.7): el iniciador aprueba primero; los otros dos después.
+  // Con la tercera aprobación el estado pasa a `wallet_approved`, el fondo existe y las
+  // tarjetas de datos se abren (por eso este orden y no la interfaz de antes).
+  for (const session of sessions) {
+    const approved = await apiOn(session.page, `/api/cluster/${clusterId}/approval?phase=wallet`, {
+      method: 'POST',
+      body: JSON.stringify({ walletAddress: session.pastor.address, phase: 'wallet' }),
+    })
+    if (approved.status === 200) ok(`${session.pastor.variable}: aprobó la billetera`)
+    else fail(`${session.pastor.variable}: no pudo aprobar la billetera (${approved.status} ${JSON.stringify(approved.body).slice(0, 120)})`)
   }
+
+  // Presupuesto y oferta por API (la interfaz los abre en orden, uno tras otro).
+  writeTinyPdf(PDF_PATH)
+  const budget = await apiOn(initiator.page, `/api/cluster/${clusterId}/budget`, {
+    method: 'PUT',
+    body: JSON.stringify({ walletAddress: initiator.pastor.address, fourthYearBudget: 400 }),
+  })
+  if (budget.status === 200) ok('presupuesto del cuarto año guardado (400)')
+  else fail(`PUT budget → ${budget.status} ${JSON.stringify(budget.body).slice(0, 120)}`)
+  const pdfBase64 = fs.readFileSync(PDF_PATH).toString('base64')
+  const upload = async (side) => apiOn(initiator.page, `/api/cluster/${clusterId}/document`, {
+    method: 'POST',
+    body: null,
+    multipart: { side, walletAddress: initiator.pastor.address, file: pdfBase64 },
+  })
+  const budgetPdf = await upload('budget')
+  if (budgetPdf.status === 200) ok('PDF del presupuesto subido')
+  else fail(`documento budget → ${budgetPdf.status} ${JSON.stringify(budgetPdf.body).slice(0, 120)}`)
+  const director = await apiOn(initiator.page, `/api/cluster/${clusterId}/director`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      walletAddress: initiator.pastor.address,
+      directorFirstYearPay: 180,
+      directorFirstYearHours: 40,
+    }),
+  })
+  if (director.status === 200) ok('oferta del director guardada (180 / 40 h)')
+  else fail(`PUT director → ${director.status} ${JSON.stringify(director.body).slice(0, 120)}`)
+  const directorPdf = await upload('director')
+  if (directorPdf.status === 200) ok('PDF de la oferta del director subido')
+  else fail(`documento director → ${directorPdf.status} ${JSON.stringify(directorPdf.body).slice(0, 120)}`)
 
   // La beca sale de la bóveda del curso y el 10% del clúster solo se mueve si hay
   // beca: con la bóveda vacía la guía se acredita pero el fondo del clúster nunca se
@@ -416,16 +454,16 @@ export async function prepareReadyCluster({
 
   }
 
-  // 6. Aprobaciones
+  // 6. Aprobaciones de los datos (fase `data`), por API: con la tercera el clúster
+  // pasa a `requested` si cumple las condiciones de REQ/161 §4.2.
   for (const session of sessions) {
-    await session.page.goto(`${base}/${lang}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded' })
-    await session.page.waitForFunction(
-      () => Array.from(document.querySelectorAll('button')).some((b) => /i know and approve|conozco y apruebo/i.test(b.textContent || '')),
-      { timeout: 45000 },
-    ).catch(() => {})
-    const clicked = await clickApprove(session.page)
-    if (!clicked) fail(`${session.pastor.variable}: sin botón de aprobación`)
-    await new Promise((r) => setTimeout(r, 2500))
+    const approved = await apiOn(session.page, `/api/cluster/${clusterId}/approval?phase=data`, {
+      method: 'POST',
+      body: JSON.stringify({ walletAddress: session.pastor.address, phase: 'data' }),
+    })
+    if (approved.status === 200) ok(`${session.pastor.variable}: aprobó los datos`)
+    else fail(`${session.pastor.variable}: no pudo aprobar los datos (${approved.status} ${JSON.stringify(approved.body).slice(0, 160)})`)
+    await new Promise((r) => setTimeout(r, 1200))
   }
 
   const presentation = await apiOn(initiator.page, `/api/cluster/${clusterId}/gd-presentation?walletAddress=${initiator.pastor.address}`)

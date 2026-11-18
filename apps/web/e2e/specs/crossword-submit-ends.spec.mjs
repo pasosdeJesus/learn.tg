@@ -339,7 +339,8 @@ async function main() {
   capture.stop()
   await browser.close()
   console.log(`\nDuración: ${((performance.now() - t0) / 1000).toFixed(1)}s`)
-  summary(t0)
+  const failures = summary(t0)
+  process.exit(failures > 0 ? 1 : 0)
 }
 
 main().catch((error) => {

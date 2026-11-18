@@ -84,7 +84,8 @@ async function main() {
 
   await browser.close()
   console.log(`\nDuración: ${((performance.now() - t0) / 1000).toFixed(1)}s`)
-  summary()
+  const failures = summary(t0)
+  process.exit(failures > 0 ? 1 : 0)
 }
 
 main().catch((error) => {

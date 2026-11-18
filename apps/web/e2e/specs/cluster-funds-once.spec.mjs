@@ -196,7 +196,8 @@ async function main() {
   console.log('  [pendiente] el reparto entre dos clústeres presentados (A y luego B) necesita tres pastores más (REQ §12)')
 
   await browser.close()
-  summary(t0)
+  const failures = summary(t0)
+  process.exit(failures > 0 ? 1 : 0)
 }
 
 main().catch((error) => {

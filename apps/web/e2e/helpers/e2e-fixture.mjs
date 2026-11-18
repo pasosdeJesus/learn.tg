@@ -9,17 +9,38 @@
 
 export const GD_COURSE_ID = 10
 
-/** Llama a la API desde la sesión de una página. */
+/**
+ * Llama a la API desde la sesión de una página.
+ *
+ * `multipart: { side, walletAddress, file }` (con `file` en base64) envía el
+ * formulario que espera `/api/cluster/[id]/document`; el resto de llamadas van en JSON.
+ */
 export async function apiOn(page, path, init = {}) {
   return page.evaluate(
     async (args) => {
-      const res = await fetch(args.path, {
-        ...args.init,
-        headers: { 'Content-Type': 'application/json', ...(args.init?.headers || {}) },
-      })
-      let body = null
-      try { body = await res.json() } catch { body = null }
-      return { status: res.status, body }
+      const { multipart, ...rest } = args.init || {}
+      let body = rest.body
+      let headers = { ...(rest.headers || {}) }
+      if (multipart) {
+        const form = new FormData()
+        for (const [key, value] of Object.entries(multipart)) {
+          if (key !== 'file') {
+            form.append(key, value)
+            continue
+          }
+          const binary = atob(value)
+          const bytes = new Uint8Array(binary.length)
+          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+          form.append('file', new Blob([bytes], { type: 'application/pdf' }), 'document.pdf')
+        }
+        body = form
+      } else if (typeof body === 'string') {
+        headers['Content-Type'] = 'application/json'
+      }
+      const res = await fetch(args.path, { ...rest, body, headers })
+      let json = null
+      try { json = await res.json() } catch { json = null }
+      return { status: res.status, body: json }
     },
     { path, init },
   )

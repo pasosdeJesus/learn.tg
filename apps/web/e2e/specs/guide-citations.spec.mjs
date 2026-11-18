@@ -107,7 +107,8 @@ async function main() {
 
   const seconds = ((performance.now() - t0) / 1000).toFixed(1)
   console.log(`\nDuración: ${seconds}s`)
-  summary()
+  const failures = summary(t0)
+  process.exit(failures > 0 ? 1 : 0)
 }
 
 main().catch((error) => {

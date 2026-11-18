@@ -136,7 +136,8 @@ async function main() {
   ok('los tres pastores salieron')
 
   await browser.close()
-  summary(t0)
+  const failures = summary(t0)
+  process.exit(failures > 0 ? 1 : 0)
 }
 
 main().catch((error) => {

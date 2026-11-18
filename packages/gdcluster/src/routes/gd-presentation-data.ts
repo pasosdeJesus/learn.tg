@@ -30,13 +30,19 @@ async function syncDataState(
   const budgetReady = Number(after.fourth_year_budget ?? 0) > 0 && !!after.budget_draft_path
   const next = budgetReady ? 'waiting_for_pd_job_offer' : 'waiting_for_budget'
   if (next === status) return
-  await db
+  try {
+    await db
     .updateTable('clustergd')
     .set({ gd_status: next, updated_at: new Date() })
     .where('id', '=', clusterId)
-    .where('gd_status', '=', status)
-    .execute()
-  await addClusterHistory(db, clusterId, 'gd_status_changed', status, next, usuarioId)
+      .where('gd_status', '=', status)
+      .execute()
+    await addClusterHistory(db, clusterId, 'gd_status_changed', status, next, usuarioId)
+  } catch (error) {
+    // Los datos ya quedaron guardados: un fallo al mover el estado se registra y se
+    // sigue (la siguiente lectura lo vuelve a intentar con los datos completos).
+    console.error('gd data state sync failed:', error instanceof Error ? error.message : String(error))
+  }
 }
 
 interface Context {
@@ -122,7 +128,10 @@ export async function updateBudget(deps: GdclusterDeps, req: NextRequest, params
     })
   } catch (error) {
     console.error('cluster budget update error:', error instanceof Error ? error.message : String(error))
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error', code: 'budget_update_failed', detail: error instanceof Error ? error.message : String(error) },
+      { status: 500 },
+    )
   }
 }
 
@@ -169,7 +178,10 @@ export async function updateDirector(deps: GdclusterDeps, req: NextRequest, para
     })
   } catch (error) {
     console.error('cluster director update error:', error instanceof Error ? error.message : String(error))
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error', code: 'director_update_failed', detail: error instanceof Error ? error.message : String(error) },
+      { status: 500 },
+    )
   }
 }
 
