@@ -50,29 +50,43 @@ describe('getPastorChurch', () => {
 })
 
 describe('getChurchCluster', () => {
+  function membershipDb(row: any) {
+    const where: any[] = []
+    const builder: any = {
+      selectFrom: vi.fn(() => builder),
+      innerJoin: vi.fn(() => builder),
+      select: vi.fn(() => builder),
+      where: vi.fn((...args: any[]) => {
+        where.push(args)
+        return builder
+      }),
+      executeTakeFirst: vi.fn().mockResolvedValue(row),
+    }
+    return { db: builder, where }
+  }
+
   it('returns cluster membership when church belongs to a cluster', async () => {
     const membership = { clustergd_id: 1, joined_at: new Date(), left_at: null }
-    const mockDb = {
-      selectFrom: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      executeTakeFirst: vi.fn().mockResolvedValue(membership),
-    } as any
+    const { db } = membershipDb(membership)
 
-    const result = await getChurchCluster(mockDb, 1)
+    const result = await getChurchCluster(db, 1)
     expect(result).toEqual(membership)
   })
 
   it('returns null when church has no active cluster membership', async () => {
-    const mockDb = {
-      selectFrom: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      executeTakeFirst: vi.fn().mockResolvedValue(null),
-    } as any
+    const { db } = membershipDb(null)
 
-    const result = await getChurchCluster(mockDb, 99)
+    const result = await getChurchCluster(db, 99)
     expect(result).toBeNull()
+  })
+
+  // Un clúster disuelto no puede seguir bloqueando a sus iglesias (medido 2026-11-18:
+  // disolver el clúster dejaba a la iglesia con 409 al crear otro).
+  it('ignores the membership of a disbanded cluster', async () => {
+    const { db, where } = membershipDb(null)
+    await getChurchCluster(db, 99)
+    expect(where).toContainEqual(['cc.left_at', 'is', null])
+    expect(where).toContainEqual(['c.status', '!=', 'disbanded'])
   })
 })
 

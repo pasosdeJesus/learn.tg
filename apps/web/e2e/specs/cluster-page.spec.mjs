@@ -250,14 +250,29 @@ async function main() {
     if (shows(en, es)) ok(`tarjeta presente: ${en}`)
     else fail(`falta la tarjeta ${en} | página: ${text.slice(0, 240)}`)
   }
+  // La fase de la billetera ya se ve mientras el clúster se forma (REQ/161 §4.7): su
+  // subtítulo es "Pastors approval for the cluster wallet", distinto de la tarjeta de
+  // aprobación de los datos, que sigue oculta hasta tener las tres iglesias.
   for (const [en, es] of [
     ['Fourth year budget', 'Presupuesto del cuarto año'],
     ['Program Director', 'Director del programa'],
-    ['Pastors approval', 'Aprobación de los pastores'],
     ['Present to Global Disciples', 'Presentar el clúster a Global Disciples'],
   ]) {
     if (shows(en, es)) fail(`un clúster en formación no debería mostrar ${en}`)
     else ok(`oculta mientras se forma: ${en}`)
+  }
+  const headings = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('h2')).map((h) => h.textContent.replace(/\s+/g, ' ').trim()),
+  )
+  if (headings.some((h) => /^Pastors approval$|^Aprobación de los pastores$/.test(h))) {
+    fail(`un clúster en formación no debería mostrar la tarjeta de aprobación de datos (${headings.join(' | ')})`)
+  } else {
+    ok('la aprobación de los datos está oculta mientras se forma')
+  }
+  if (shows('Pastors approval for the cluster wallet', 'Aprobación de los pastores de la billetera del clúster')) {
+    ok('la fase de aprobación de la billetera sí se ve mientras se forma')
+  } else {
+    fail('falta la fase de aprobación de la billetera en la tarjeta de la billetera')
   }
   if (/members in learn\.tg|miembros en learn\.tg/.test(text)) ok('la iglesia muestra sus miembros en learn.tg')
   else fail('la fila de la iglesia no muestra el número de miembros')

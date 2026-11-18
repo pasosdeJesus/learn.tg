@@ -82,11 +82,16 @@ export async function getChurchCluster(
   db: Kysely<any>,
   churchId: number
 ): Promise<{ clustergd_id: number; joined_at: Date | null; left_at: Date | null } | null> {
+  // Un clúster disuelto (soft delete) no cuenta: sin esto la iglesia quedaba "dentro"
+  // de un clúster que ya no existe y no podía crear ni aceptar otro (409 medido
+  // 2026-11-18 al disolver los clústeres que dejan los specs).
   const result = await db
-    .selectFrom('church_clustergd')
-    .select(['clustergd_id', 'joined_at', 'left_at'])
-    .where('church_id', '=', churchId)
-    .where('left_at', 'is', null)
+    .selectFrom('church_clustergd as cc')
+    .innerJoin('clustergd as c', 'c.id', 'cc.clustergd_id')
+    .select(['cc.clustergd_id', 'cc.joined_at', 'cc.left_at'])
+    .where('cc.church_id', '=', churchId)
+    .where('cc.left_at', 'is', null)
+    .where('c.status', '!=', 'disbanded')
     .executeTakeFirst()
   return result ?? null
 }

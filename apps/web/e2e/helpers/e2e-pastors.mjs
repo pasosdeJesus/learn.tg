@@ -42,7 +42,11 @@ export function resolveClusterPastors({ count = 3, destructive = false, exclude 
   // just left one): taking them makes the join fail with 409. They are excluded here;
   // the ones this helper creates are marked 'created for a cluster'.
   const ownedByAnotherClusterSpec = /^cluster-(page|ready|flow|three-pastors|funds-once)/
-  const reusable = (row) => !ownedByAnotherClusterSpec.test(String(row.note || ''))
+  // El pastor con el curso GD es el recurso escaso (el iniciador): se reutiliza aunque
+  // lo haya usado otro spec de clúster, porque cada corrida deja el clúster disuelto o
+  // salido. Sin esto, el único pastor con curso del registro quedaba excluido por su
+  // nota y todos los specs de tres pastores se omitían (medido 2026-11-18).
+  const reusable = (row) => row.hasGdCourse === true || !ownedByAnotherClusterSpec.test(String(row.note || ''))
   const excluded = new Set(exclude.map((address) => String(address).toLowerCase()))
   const free = (row) => !excluded.has(String(row.address).toLowerCase())
   const pastors = recentByRole('pastor', { count: 50 }).filter(reusable).filter(free)
