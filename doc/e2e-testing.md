@@ -44,6 +44,7 @@ suite writes.
 | `bin/m test:e2e:summary <log…>` | Compare the results of two or more runs | no | local files |
 | `make wait-site` | Wait until the dev site answers 200 | no | dev site `:9001` |
 | `EXPECT_CHANGE=1 make wait-site` | Wait for a **new build** (a real deploy) | no | dev site `:9001` |
+| `EXPECT_ASSET=/img/x.svg make wait-site` | Wait until a **static file** is deployed (§3.5) | no | dev site `:9001` |
 
 The browser targets (`test-e2e`, `test-e2e-retry`, `test-e2e-spec` and the
 shortcuts) export `IPDES=learn.tg PUERTOPRU=9001 CHAIN_ID=11142220`; the smoke
@@ -318,8 +319,10 @@ exits when the site is usable again.
 cd apps/web
 bin/wait-site                       # up? (max 15 min, exits at once if already up)
 bin/wait-site --expect-build-change  # up AND serving a different build than before
+bin/wait-site --expect-asset /img/diagrams/7be1f4786140c0a2.svg   # up AND that file served
 bin/wait-site --url https://learn.tg --timeout 600 --interval 10
 EXPECT_CHANGE=1 TIMEOUT=1200 make wait-site   # same, through make
+EXPECT_ASSET=/img/diagrams/abc.svg TIMEOUT=600 make wait-site   # comma-separated list
 ```
 
 | Flag | Meaning |
@@ -330,6 +333,7 @@ EXPECT_CHANGE=1 TIMEOUT=1200 make wait-site   # same, through make
 | `--interval` | Seconds between probes, default 10 |
 | `--expect-build-change` | Do not exit on the first 200: wait for a **new** build id |
 | `--expect-build <id>` | Wait for that exact build id (when the operator tells it) |
+| `--expect-asset <path>` | Wait until that URL stops answering the HTML fallback (repeatable, comma-separated) |
 
 It exits `0` when the site is up (and, with `--expect-build-change`, when the
 build changed), `1` on timeout, and prints one line per probe with the status, the
@@ -352,6 +356,15 @@ read from) leaves the page chunk of `/en/cluster` untouched, so
 new code. When the change is server-side, skip the marker and probe that
 behaviour instead (see the next paragraph); keep `--expect-build-change` for
 changes that reach the rendered page.
+
+**A `public/`-only deploy never moves the marker** (measured 2026-11-19): adding
+files to `apps/web/public/` (the guide diagrams, the credential PNGs) leaves every
+chunk of `/en/cluster` untouched, so `--expect-build-change` polled for 11 minutes
+against a build that no longer existed. Two traps add up here: the marker does not
+move **and** the site answers `200 text/html` (its fallback) to a path that does not
+exist, so a status code proves nothing about a static file. Use
+`--expect-asset <path>` (it waits for a non-HTML content type) or, for the diagrams,
+`make test-e2e-spec SPEC=guide-diagrams`, which checks all 12 in under 2 s.
 
 A deploy is not confirmed by the build id alone: check the behaviour that should
 have changed. Cheapest probe, no session needed (it must answer `400` with a
@@ -426,6 +439,15 @@ Puppeteer through `@pasosdejesus/m/e2e` (`initTestEnv`, `launchBrowser`,
 they register wallets, complete profiles, claim UBI, donate and buy (see §2.2),
 except `guide-citations.spec.mjs`, which only opens guides and reads their text
 (it checks that every guide keeps its `chapter:verse` citations).
+
+`guide-diagrams.spec.mjs` is the other exception and needs **no browser and no
+session**: it reads every ` ```mermaid ` block of `resources/`, computes the
+`/img/diagrams/<hash>.svg` URL the renderer will use (`lib/remarkMermaid.mjs`) and
+fetches each one from the site under test, expecting `image/svg+xml` and a real
+`<svg>` body (the site answers 200 with its HTML to unknown paths, so the body is
+checked, not just the status). It takes under 2 s and catches the case this suite hit
+on 2026-11-19: the guides deployed without their Spanish diagrams — 7 of 12 present,
+5 soft 404s, and nothing else complained.
 
 ### 5.1 Wallet in the specs (R-#239 / R-#284)
 
@@ -687,13 +709,13 @@ A 500 can arrive without a visible cause: in `next dev` the error overlay
 sometimes does not paint (measured 2026-09-20: `invalid type: boolean 'false',
 expected enum CodeFrameColorMode`) and neither the route's `console.error` nor
 the error page reach the console. **The underlying cause is patched** since
-2026-09-27 (https://github.com/pasosdeJesus/learn.tg/issues/267):
+2026-09-27 (https://github.com/pasosdeJesus/learn.tg/issues/302):
 `apps/web/patches/next@16.3.5-pr100607.patch` normalizes in the WASM wrapper
 (`dist/build/swc/index.js`): it mirrors the napi defaults (`color` enum, `maxWidth`
 240, lines 2/3, `language`) and strips `undefined` fields before
 `serde_wasm_bindgen` (the equivalent of
 [vercel/next.js#100607](https://github.com/vercel/next.js/pull/100607)), so the
-overlay paints again; see R-#267 §6 to regenerate it.
+overlay paints again; see R-#302 §7 to regenerate it.
 
 Since 2026-09-20:
 

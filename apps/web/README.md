@@ -170,7 +170,7 @@ Then edit `.env` with your values. Key variables:
 
 ### Next.js patch (OpenBSD)
 
-`patches/next@16.3.5-pr100607.patch` (https://github.com/pasosdeJesus/learn.tg/issues/267)
+`patches/next@16.3.5-pr100607.patch` (https://github.com/pasosdeJesus/learn.tg/issues/302)
 fixes `codeFrameColumns` so a 500 shows its real cause instead of crashing. It is
 applied **only** by `pnpm install` (declared in `patchedDependencies` of
 `pnpm-workspace.yaml`); never

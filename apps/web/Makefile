@@ -19,11 +19,15 @@ db-connections-check:
 	@sh bin/db-connections-check
 
 # Espera a que el sitio de desarrollo vuelva a responder (el operador despliega
-# en otra máquina) y mide cuánto tarda. Con EXPECT_CHANGE=1 exige build nuevo.
+# en otra máquina) y mide cuánto tarda. Con EXPECT_CHANGE=1 exige build nuevo; con
+# EXPECT_ASSET (una ruta, o varias separadas por coma) exige además que esos
+# archivos de public/ ya se sirvan: el marcador de build no se mueve cuando el
+# despliegue sólo agrega estáticos (bin/wait-site, doc/e2e-testing.md §3.5).
 #   make wait-site
 #   EXPECT_CHANGE=1 TIMEOUT=1200 make wait-site
+#   EXPECT_ASSET=/img/diagrams/abc.svg TIMEOUT=600 make wait-site
 wait-site:
-	@node bin/wait-site $${SITE_URL:+--url $$SITE_URL} $${EXPECT_CHANGE:+--expect-build-change} $${TIMEOUT:+--timeout $$TIMEOUT}
+	@node bin/wait-site $${SITE_URL:+--url $$SITE_URL} $${EXPECT_CHANGE:+--expect-build-change} $${EXPECT_ASSET:+--expect-asset $$EXPECT_ASSET} $${TIMEOUT:+--timeout $$TIMEOUT}
 
 # Diagramas de las guías (doc/guide-writing.md § Diagrams, lib/remarkMermaid.mjs):
 # los bloques ```mermaid de `resources/` se renderizan a SVG en public/img/diagrams.
@@ -239,7 +243,7 @@ swc-wasm:
 	mkdir -p node_modules/next/wasm/@next/swc-wasm-nodejs
 	cp node_modules/@next/swc-wasm-nodejs/wasm.js node_modules/@next/swc-wasm-nodejs/wasm_bg.wasm node_modules/next/wasm/@next/swc-wasm-nodejs/
 
-# Parche de Next 16 para OpenBSD (https://github.com/pasosdeJesus/learn.tg/issues/267):
+# Parche de Next 16 para OpenBSD (https://github.com/pasosdeJesus/learn.tg/issues/302):
 # sin bindings nativos el code-frame va por el binding WASM, que espera `color` como
 # enum (`None|Error|Warning|Info`) y `maxWidth` numérico, y Next le pasa `false` /
 # `undefined`. Sin el parche, cualquier 500 en `next dev` se reporta como
@@ -252,7 +256,7 @@ swc-wasm:
 # en `pnpm-workspace.yaml`
 # (`patches/next@16.3.5-pr100607.patch`, con su hash en pnpm-lock.yaml). Este target sirve
 # para aplicarlo a mano y comprobar que quedó; para REGENERAR el parche ver
-# https://github.com/pasosdeJesus/learn.tg/issues/267 (no editar node_modules a mano:
+# https://github.com/pasosdeJesus/learn.tg/issues/302 (no editar node_modules a mano:
 # pnpm usa enlaces duros y el store queda sucio, ERR_PNPM_PATCH_FAILED).
 .PHONY: next-patch next-patch-check
 next-patch:
@@ -265,7 +269,7 @@ next-patch-check:
 	  grep -q "function getCodeFrameOptions" "$$f" 2>/dev/null || { \
 	    echo "ERROR: el parche de Next no está aplicado en $$f"; \
 	    echo "  Aplícalo con: cd apps/web && pnpm install"; \
-	    echo "  Si pnpm falla con ERR_PNPM_PATCH_FAILED: ver https://github.com/pasosdeJesus/learn.tg/issues/267."; \
+	    echo "  Si pnpm falla con ERR_PNPM_PATCH_FAILED: ver https://github.com/pasosdeJesus/learn.tg/issues/302."; \
 	    exit 1; \
 	  }; \
 	done

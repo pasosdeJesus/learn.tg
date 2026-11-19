@@ -10,7 +10,7 @@
  * `lib/server-errors.ts`.
  *
  * El overlay ya se arregla con el parche de Next
- * (https://github.com/pasosdeJesus/learn.tg/issues/267), pero este registro se
+ * (https://github.com/pasosdeJesus/learn.tg/issues/302), pero este registro se
  * queda: también cubre lo que no pasa por el overlay.
  *
  * Se registra también `unhandledRejection` / `uncaughtException` porque los

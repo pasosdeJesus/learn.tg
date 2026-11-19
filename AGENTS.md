@@ -100,7 +100,14 @@ What follows is only what those files do not tell you.
 4. **This VM cannot deploy.** Production (`https://learn.tg`) and the official development
    site (`https://learn.tg:9001`) run on other machines; the agent's sandbox is
    `http://localhost:4000`. A change reaches the dev site only when the operator deploys
-   (`doc/environments.md`).
+   (`doc/environments.md`). While the deploy runs the site answers 502/503: wait for the new
+   build with `EXPECT_CHANGE=1 TIMEOUT=1800 make wait-site` (from `apps/web`, in the
+   background, and treat a spec run before it as measuring the old code) — see
+   `doc/e2e-testing.md` §3.5 for the flags, the defaults and the exit codes. **The build
+   marker cannot see a `public/`-only deploy** (diagrams, credential PNGs): wait for the file
+   itself with `EXPECT_ASSET=/img/diagrams/<hash>.svg make wait-site`, or run
+   `make test-e2e-spec SPEC=guide-diagrams`. The site answers `200 text/html` to any missing
+   path, so a 200 says nothing about a static file.
 5. **Never modify an applied migration**: schema changes go in a new one
    (`bin/m db:mig:make <name>`).
 6. **Do not run `pnpm test` inside `packages/*`** (the root workspace exists, but the

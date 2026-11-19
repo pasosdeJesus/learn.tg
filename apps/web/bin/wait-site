@@ -4,11 +4,21 @@
 // Uso:
 //   bin/wait-site                       # espera a que responda 200 (máx 15 min)
 //   bin/wait-site --expect-build-change # espera además un build nuevo (deploy real)
+//   bin/wait-site --expect-asset /img/diagrams/abc123.svg
+//   bin/wait-site --expect-asset /img/a.svg,/img/b.svg --expect-build-change
 //   bin/wait-site --url https://learn.tg --timeout 600 --interval 10
 //
 // Qué considera "arriba": una respuesta HTTP 200 de la página de clúster (sin
 // sesión), después de haber visto el sitio caído o lento. Si el sitio ya estaba
 // arriba al arrancar y no se pide un build nuevo, lo dice y termina.
+//
+// `--expect-asset` existe porque el marcador de build es el chunk de la ruta
+// `/en/cluster`: un despliegue que sólo agrega archivos a `public/` (diagramas de
+// las guías, PNG de credenciales) **no lo mueve**, así que esperarlo es esperar en
+// vano (medido 2026-11-19: dos despliegues y el marcador nunca cambió). Cada
+// `--expect-asset` se considera desplegado cuando deja de responder HTML: el sitio
+// devuelve 200 `text/html` (su fallback) a toda ruta que no existe, así que el
+// código de estado por sí solo no sirve para comprobarlo.
 //
 // Pensado para el operador y para el agente: mientras corre en el fondo se puede
 // seguir trabajando, y al final imprime el tiempo total.
@@ -27,6 +37,12 @@ const TIMEOUT = Number(arg('timeout', 900))
 const INTERVAL = Number(arg('interval', 10))
 const EXPECT_CHANGE = args.includes('--expect-build-change')
 const EXPECT_BUILD = arg('expect-build', '')
+const EXPECT_ASSETS = args
+  .flatMap((a, i) => (a === '--expect-asset' ? [args[i + 1] || ''] : a.startsWith('--expect-asset=') ? [a.slice(15)] : []))
+  .flatMap((v) => v.split(','))
+  .map((v) => v.trim())
+  .filter(Boolean)
+const NEED_BUILD = EXPECT_CHANGE || !!EXPECT_BUILD
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
@@ -55,19 +71,44 @@ async function probe() {
   }
 }
 
+async function probeAssets() {
+  const states = []
+  for (const path of EXPECT_ASSETS) {
+    try {
+      const res = await fetch(`${BASE}${path}`, { headers: { 'user-agent': 'wait-site' } })
+      const type = (res.headers.get('content-type') || '').split(';')[0].trim()
+      // 200 no basta: el fallback de la SPA responde 200 text/html a lo que no existe.
+      states.push({ path, status: res.status, type, ready: res.status === 200 && type !== 'text/html' })
+    } catch (error) {
+      states.push({ path, status: 0, type: error.message.slice(0, 40), ready: false })
+    }
+  }
+  return states
+}
+
+function reportAssets(states) {
+  for (const s of states) {
+    const mark = s.ready ? '[OK]' : '[WAIT]'
+    console.log(`  ${mark} ${s.path} → ${s.status || 'sin conexión'}${s.type ? ` ${s.type}` : ''}`)
+  }
+}
+
 const first = await probe()
 const initialMarker = first.marker
 let sawProblem = first.status !== 200
 console.log(`[t=0s] ${BASE}${PATH} → ${first.status || 'sin conexión'} (${first.ms} ms)${first.marker ? ` build ${first.marker}` : ''}`)
 
-if (first.status === 200 && !EXPECT_CHANGE) {
+if (first.status === 200 && !NEED_BUILD && EXPECT_ASSETS.length === 0) {
   console.log(`El sitio ya estaba arriba (${first.ms} ms).`)
   process.exit(0)
 }
 
+let lastAssets = []
 for (;;) {
   if (elapsed() > TIMEOUT) {
+    const pending = lastAssets.filter((a) => !a.ready).map((a) => a.path)
     console.log(`[FAIL] el sitio no quedó arriba en ${TIMEOUT} s.`)
+    if (pending.length) console.log(`       archivos que siguen sin desplegarse: ${pending.join(', ')}`)
     process.exit(1)
   }
   await new Promise((r) => setTimeout(r, INTERVAL * 1000))
@@ -87,14 +128,15 @@ for (;;) {
     `[t=${elapsed()}s] ${state.status || 'sin conexión'} (${state.ms} ms)` +
       `${state.marker ? ` build ${state.marker}` : ''}${changed ? '  ← build nuevo' : ''}`,
   )
+  const assets = EXPECT_ASSETS.length ? await probeAssets() : []
+  lastAssets = assets
+  reportAssets(assets)
+  const assetsReady = assets.every((a) => a.ready)
 
-  const up = state.status === 200 && (sawProblem || EXPECT_CHANGE ? true : true)
-  if (up && !EXPECT_CHANGE && !EXPECT_BUILD) {
-    console.log(`\n[OK] sitio arriba en ${elapsed()} s (última respuesta ${state.ms} ms).`)
-    process.exit(0)
-  }
-  if (up && (changed || matchesExpected)) {
-    console.log(`\n[OK] build nuevo visible a los ${elapsed()} s.`)
+  const up = state.status === 200 || assetsReady
+  const buildOk = NEED_BUILD ? changed || matchesExpected : true
+  if (up && buildOk && assetsReady) {
+    console.log(`\n[OK] desplegado en ${elapsed()} s (última respuesta ${state.ms} ms).`)
     process.exit(0)
   }
 }

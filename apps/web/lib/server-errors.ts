@@ -10,7 +10,7 @@
  * escapan a los `try/catch` de las rutas.
  *
  * El overlay ya se arregla con el parche de Next
- * (https://github.com/pasosdeJesus/learn.tg/issues/267), pero este registro se
+ * (https://github.com/pasosdeJesus/learn.tg/issues/302), pero este registro se
  * queda: también cubre las rutas de streaming y las promesas sueltas.
  *
  * Solo se usa en el servidor.
