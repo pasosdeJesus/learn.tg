@@ -142,18 +142,31 @@ async function presentCluster({ browser, base, env, verifier, funder, pastors, s
   }
   ok(`clúster ${side} #${clusterId} listo`)
 
-  for (const session of sessions) {
-    const res = await apiOn(session.page, `/api/cluster/${clusterId}/approval`, {
-      method: 'POST',
-      body: JSON.stringify({ walletAddress: session.pastor.address }),
-    })
-    if (res.status !== 200) fail(`aprobación de ${side}/${session.pastor.variable} → ${res.status}`)
+  // Dos fases (REQ/161 §4.7): la billetera primero (el iniciador antes que los demás); la
+  // de datos va **después** de que el fondo tenga dinero, porque la tercera aprobación es
+  // la solicitud a pdJ y exige el fondo con saldo.
+  const approvePhase = async (phase) => {
+    for (const session of sessions) {
+      const res = await apiOn(session.page, `/api/cluster/${clusterId}/approval?phase=${phase}`, {
+        method: 'POST',
+        body: JSON.stringify({ walletAddress: session.pastor.address, phase }),
+      })
+      // El fixture pudo dejar el clúster ya aprobado (o incluso solicitado): repetir la
+      // aprobación responde 409 y eso significa "ya estaba", no un fallo.
+      const already = res.status === 409
+        && ['wallet_approval_closed', 'approval_closed', 'data_approval_not_open'].includes(res.body?.code)
+      if (res.status !== 200 && !already) {
+        fail(`aprobación ${phase} de ${side}/${session.pastor.variable} → ${res.status} ${JSON.stringify(res.body).slice(0, 120)}`)
+      }
+    }
   }
-  ok(`clúster ${side}: los tres pastores aprobaron`)
+  await approvePhase('wallet')
 
   // Un clúster sin dinero en su fondo no se puede presentar (R-#161, 2026-11-05) y
   // sus iglesias nuevas todavía no generaron becas: el spec deja el fondo con USDT.
   await ensureClusterFund({ cluster: { clusterId, initiator, wallet }, creds: funder, side, ok, fail })
+  await approvePhase('data')
+  ok(`clúster ${side}: los tres pastores aprobaron la billetera y los datos`)
 
   const requested = await apiOn(initiator.page, `/api/cluster/${clusterId}/gd-presentation`, {
     method: 'POST',
@@ -164,7 +177,7 @@ async function presentCluster({ browser, base, env, verifier, funder, pastors, s
     return null
   }
 
-  for (const status of ['under_review', 'approved', 'sent']) {
+  for (const status of ['under_review', 'sent']) {
     const res = await verifierApi(`/api/cluster/${clusterId}/gd-presentation`, {
       method: 'PUT',
       body: JSON.stringify({ walletAddress: verifier.address, status }),

@@ -283,6 +283,11 @@ The flags that matter for the **credential metadata** (`credential_metadata`):
 | `--premium` | `credential_metadata.is_premium = true` (the "Premium" attribute and `premiumSbtCount`) |
 | `--icon <path>` | the icon used to compose the badge; the row keeps `img/credential/<tokenId>.png` as `image_url` |
 
+`register-type` also rasterizes the badge into `public/img/credential/<tokenId>.png`,
+which is what `image_url` promises. If that step fails (no deployments, or the warning
+`cred.image_failed`) the site serves its HTML in place of the image: regenerate it with
+`node bin/credential-icons.mjs` (see `deploy-credentials.md` §3b).
+
 Without `--course-id` or `--premium` the row keeps `course_id = NULL` and
 `is_premium = false` — that is how the GD course ended up with a premium-less,
 course-less credential (fixed later by
@@ -346,6 +351,7 @@ bin/m eng:opwallet:call --name admin --to <VAULT_V5> \
 | Guide content | `resources/{lang}/{prefijoRuta}/{sufijoRuta}.md` | 400-700 words, 8+ questions (5 per puzzle) |
 | Vault | `LearnTGVaultsV5.createVault(id, usdt, slearn)` | `bin/m eng:opwallet:send` (review first) |
 | SBT icon | `public/img/credential/source/` | 512×512 SVG |
+| Credential PNG | `public/img/credential/<tokenId>.png` | 512×512 PNG; `node bin/credential-icons.mjs` lo genera desde el SVG |
 | Credential type | `PasosDeJesusCredentials.registerCredentialType` | `bin/m eng:credentials:register-type --course-id <id> [--premium]` (review first; needs the deployments folder) |
 | Credential metadata | DB `credential_metadata` (`course_id`, `is_premium`) | the scaffold migration; `bin/m eng:credentials:sync-cache` refreshes it from the contract |
 

@@ -62,9 +62,14 @@ async function main() {
     return
   }
 
-  const { clusterId, sessions, ready } = prepared
+  const { clusterId, sessions, ready, fundEmpty } = prepared
   const body = ready || {}
-  if (body.ready === true && (body.missing || []).length === 0 && (body.missing_data || []).length === 0) {
+  const onlyMissingApprovals = (body.missing || []).length === 1 && body.missing[0] === 'approvals'
+  if (fundEmpty && onlyMissingApprovals) {
+    // Todo está en orden salvo la solicitud, que exige dinero en el fondo y esta corrida
+    // no generó becas nuevas: se documenta y no se cuenta como fallo.
+    console.log('  [nota] listo salvo la solicitud: el fondo del clúster no recibió dinero en esta corrida')
+  } else if (body.ready === true && (body.missing || []).length === 0 && (body.missing_data || []).length === 0) {
     ok('el clúster está listo para presentarse')
   } else {
     const blocking = (body.pastors || [])

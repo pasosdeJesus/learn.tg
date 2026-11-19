@@ -197,8 +197,28 @@ async function main() {
     const list = await admin('/api/admin/clusters')
     const mine = (list.body?.clusters || []).find((row) => row.initiator_church_id === fixture.churchId)
     if (mine && mine.status !== 'disbanded') {
-      clusterId = mine.id
-      ok(`reutiliza el clúster #${clusterId}`)
+      // Sólo sirve reutilizarlo si sigue en `forming` y sin la billetera aprobada: desde
+      // la aprobación del iniciador (REQ/161 §4.7) la billetera es fija y las tarjetas de
+      // datos ya se ven, así que las comprobaciones de esta spec no aplican.
+      const detail = await api(`/api/cluster/${mine.id}?walletAddress=${wallet}`)
+      const fresh = String(detail.body?.gd_status ?? 'forming') === 'forming'
+        && !(detail.body?.cluster_wallet)
+      if (fresh) {
+        clusterId = mine.id
+        ok(`reutiliza el clúster #${clusterId}`)
+      } else {
+        const left = await api(`/api/cluster/${mine.id}/leave`, {
+          method: 'POST',
+          body: JSON.stringify({ walletAddress: wallet }),
+        })
+        if (left.status !== 200) {
+          const disbanded = await admin(`/api/admin/clusters/${mine.id}`, { method: 'DELETE' })
+          if ([200, 204].includes(disbanded.status)) ok(`clúster #${mine.id} disuelto para empezar de cero`)
+          else fail(`no se pudo liberar el clúster #${mine.id} (${left.status}/${disbanded.status})`)
+        } else {
+          ok(`libera la iglesia del clúster #${mine.id}`)
+        }
+      }
     } else if (mine) {
       await api(`/api/cluster/${mine.id}/leave`, { method: 'POST', body: JSON.stringify({ walletAddress: wallet }) })
       ok(`libera la iglesia del clúster disuelto #${mine.id}`)
@@ -316,6 +336,7 @@ async function main() {
     body: JSON.stringify({ walletAddress: wallet, clusterWallet: 'no-es-una-direccion' }),
   })
   if (invalid.status === 400) ok('billetera inválida → 400')
+  else if (invalid.status === 409 && invalid.body?.code === 'gd_fields_locked') ok('la billetera ya está fija (409 gd_fields_locked)')
   else fail(`billetera inválida → ${invalid.status}`)
 
   const zero = await api(`/api/cluster/${clusterId}`, {
@@ -323,6 +344,7 @@ async function main() {
     body: JSON.stringify({ walletAddress: wallet, clusterWallet: '0x0000000000000000000000000000000000000000' }),
   })
   if (zero.status === 400) ok('dirección cero → 400')
+  else if (zero.status === 409 && zero.body?.code === 'gd_fields_locked') ok('la billetera ya está fija (409 gd_fields_locked)')
   else fail(`dirección cero → ${zero.status}`)
 
   const foreign = await api(`/api/cluster/${clusterId}`, {
@@ -330,6 +352,7 @@ async function main() {
     body: JSON.stringify({ walletAddress: wallet, clusterWallet: '0x1111111111111111111111111111111111111111' }),
   })
   if (foreign.status === 400) ok('billetera no registrada → 400')
+  else if (foreign.status === 409 && foreign.body?.code === 'gd_fields_locked') ok('la billetera ya está fija (409 gd_fields_locked)')
   else fail(`billetera no registrada → ${foreign.status}`)
 
   // ── 4b. Presupuesto del cuarto año (API) ───────────────────────────

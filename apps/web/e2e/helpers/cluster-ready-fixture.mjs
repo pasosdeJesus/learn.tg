@@ -456,20 +456,32 @@ export async function prepareReadyCluster({
 
   // 6. Aprobaciones de los datos (fase `data`), por API: con la tercera el clúster
   // pasa a `requested` si cumple las condiciones de REQ/161 §4.2.
+  let fundEmpty = false
   for (const session of sessions) {
     const approved = await apiOn(session.page, `/api/cluster/${clusterId}/approval?phase=data`, {
       method: 'POST',
       body: JSON.stringify({ walletAddress: session.pastor.address, phase: 'data' }),
     })
-    if (approved.status === 200) ok(`${session.pastor.variable}: aprobó los datos`)
-    else fail(`${session.pastor.variable}: no pudo aprobar los datos (${approved.status} ${JSON.stringify(approved.body).slice(0, 160)})`)
+    if (approved.status === 200) {
+      ok(`${session.pastor.variable}: aprobó los datos`)
+    } else if (approved.body?.code === 'cluster_fund_empty') {
+      // La tercera aprobación *es* la solicitud a pdJ y exige que el fondo tenga dinero
+      // (REQ/161 §4.7). Con billeteras reutilizadas las becas ya estaban pagadas y el
+      // 10 % no entra al fondo en esta corrida: se avisa, no se falla.
+      fundEmpty = true
+      console.log('  [nota] el fondo del clúster está vacío (becas ya pagadas): la solicitud a pdJ se omite')
+      break
+    } else {
+      fail(`${session.pastor.variable}: no pudo aprobar los datos (${approved.status} ${JSON.stringify(approved.body).slice(0, 160)})`)
+    }
     await new Promise((r) => setTimeout(r, 1200))
   }
 
   const presentation = await apiOn(initiator.page, `/api/cluster/${clusterId}/gd-presentation?walletAddress=${initiator.pastor.address}`)
   const ready = presentation.body || {}
   log(`ready=${ready.ready} missing=${JSON.stringify(ready.missing)}`)
-  if (ready.ready !== true || (ready.missing || []).length > 0) {
+  const onlyMissingApprovals = (ready.missing || []).length === 1 && ready.missing[0] === 'approvals'
+  if ((ready.ready !== true || (ready.missing || []).length > 0) && !(fundEmpty && onlyMissingApprovals)) {
     // `missing` vacío con `ready=false` significa que falta algo **por pastor**
     // (guides, puntaje, invitaciones): se imprime, y `reasons` lo dice en palabras
     // (2026-11-05, antes el fallo no decía qué pastor ni qué le faltaba).
@@ -479,5 +491,5 @@ export async function prepareReadyCluster({
     fail(`todavía no está listo: ${JSON.stringify({ missing: ready.missing, missing_data: ready.missing_data, reasons: ready.reasons, pastors: blocking })}`)
   }
 
-  return { clusterId, sessions, verifierPage, verifierApi, ready, walletCreated }
+  return { clusterId, sessions, verifierPage, verifierApi, ready, walletCreated, fundEmpty }
 }

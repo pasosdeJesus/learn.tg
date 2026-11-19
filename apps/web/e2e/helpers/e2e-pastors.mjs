@@ -20,7 +20,7 @@
 // `FUND_FRESH=1 make test-e2e-spec SPEC=premium-course-checkout`, which buys the
 // course for a new wallet and marks it in this same registry.
 import { createTestWallet } from './in-app-wallet.mjs'
-import { markWalletUsed, recentByRole, rememberWallet } from './e2e-wallets-registry.mjs'
+import { listWallets, markWalletUsed, recentByRole, rememberWallet } from './e2e-wallets-registry.mjs'
 
 function credentials(row) {
   return {
@@ -55,16 +55,34 @@ export function resolveClusterPastors({ count = 3, destructive = false, exclude 
   // keeps a course-owning pastor to work with.
   const burns = recentByRole('pastor-burn', { count: 50 }).filter((row) => !row.clusterCompletedAt).filter(free)
   const pool = destructive ? [...burns, ...pastors] : pastors
-  const withCourse = pool.filter((row) => row.hasGdCourse && !row.clusterCompletedAt)
-  const spendable = pastors.filter((row) => !row.clusterCompletedAt && !withCourse.includes(row))
-  const members = recentByRole('member', { count: 50 }).filter((row) => !row.clusterCompletedAt && reusable(row)).filter(free)
+  // El curso GD no lo tienen sólo los pastores: `premium-course-checkout` crea la
+  // billetera como `member` y el curso se compra ahí mismo. Se buscan los dueños del
+  // curso en **todo** el registro (la iglesia y el rol los pone `ensurePastorFixture`).
+  const withCourse = listWallets()
+    .filter((row) => row.hasGdCourse === true && !row.clusterCompletedAt)
+    .filter(reusable)
+    .filter(free)
+  const courseAddresses = new Set(withCourse.map((row) => String(row.address).toLowerCase()))
+  const spendable = pastors.filter(
+    (row) => !row.clusterCompletedAt && !courseAddresses.has(String(row.address).toLowerCase()),
+  )
+  const members = recentByRole('member', { count: 50 })
+    .filter((row) => !row.clusterCompletedAt)
+    // Un dueño del curso no se usa como puesto suelto: se reserva para el iniciador de
+    // otro clúster (cluster-fund-split necesita dos).
+    .filter((row) => !courseAddresses.has(String(row.address).toLowerCase()))
+    .filter(reusable)
+    .filter(free)
 
   const chosen = []
   if (withCourse.length > 0) chosen.push(withCourse[0])
   // Los pastores con el curso son el recurso escaso (cada clúster necesita uno como
   // iniciador): se gastan como **iniciadores**, no como simples puestos. Por eso los
   // miembros se prueban antes que los demás pastores con curso.
-  for (const pool of [spendable, members, withCourse.slice(1)]) {
+  // Un dueño del curso se gasta sólo como **iniciador** (es el recurso escaso): los
+  // demás puestos se cubren con pastores sin curso o con billeteras nuevas, así una
+  // corrida que necesita dos clústeres (cluster-fund-split) no se queda sin iniciador.
+  for (const pool of [spendable, members]) {
     for (const row of pool) {
       if (chosen.length >= count) break
       if (!chosen.some((entry) => entry.address === row.address)) chosen.push(row)

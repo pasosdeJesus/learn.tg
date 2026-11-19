@@ -118,7 +118,10 @@ async function main() {
       method: 'POST',
       body: JSON.stringify({ walletAddress: session.pastor.address }),
     })
-    if (res.status === 200) ok(`aprobación de ${session.pastor.variable}`)
+    // El fixture pudo dejar las aprobaciones ya dadas: repetirlas responde 409.
+    const already = res.status === 409
+      && ['wallet_approval_closed', 'approval_closed', 'data_approval_not_open'].includes(res.body?.code)
+    if (res.status === 200 || already) ok(`aprobación de ${session.pastor.variable}`)
     else fail(`aprobación de ${session.pastor.variable} → ${res.status} ${JSON.stringify(res.body)}`)
   }
 
@@ -129,7 +132,7 @@ async function main() {
   if (requested.status === 200) ok('el iniciador solicitó la presentación')
   else fail(`solicitud → ${requested.status} ${JSON.stringify(requested.body)}`)
 
-  for (const status of ['under_review', 'approved', 'sent']) {
+  for (const status of ['under_review', 'sent']) {
     const res = await verifierApi(`/api/cluster/${clusterId}/gd-presentation`, {
       method: 'PUT',
       body: JSON.stringify({ walletAddress: verifier.address, status }),

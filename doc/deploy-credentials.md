@@ -185,6 +185,48 @@ This reads the contract and updates `credential_metadata` with `name`, `type`,
 
 ---
 
+## 3b. The PNG behind `image_url`
+
+Every `credential_metadata` row promises an image at `img/credential/<tokenId>.png`.
+`register-type` (the `mpdj` plugin) composes the badge in
+`public/img/credential/generated/<tokenId>.svg` and rasterizes it with
+`rsvg-convert -w 512 -h 512` (installed in adJ as part of the base system). When that
+step does not run — a clone without `apps/contracts/deployments/`, or the warning
+`cred.image_failed` going unnoticed — the row points to a file that does not exist and
+the site answers its own HTML instead of an image (soft 404, R-#161 §7).
+
+Regenerate the missing PNGs from the SVGs:
+
+```bash
+cd apps/web
+node bin/credential-icons.mjs --list    # mapping and what is missing
+node bin/credential-icons.mjs           # create the missing ones (512x512)
+node bin/credential-icons.mjs --force   # rebuild all
+```
+
+Source of each badge, in order: `public/img/credential/generated/<tokenId>.svg` (the
+composed badge), the course icon (`cor1440_gen_proyectofinanciero.imagen` when it is an
+SVG), and the source SVG listed in §1.3. The last step picks the SVG by the course's
+**`prefijoRuta`**, never by `id`: course ids and token ids differ between development and
+production, which is exactly why these PNGs are gitignored and generated on each site
+(reading that site's `credential_metadata`). Commit the PNGs: the site
+serves them and the PWA caches them for offline reading.
+
+The PNGs are **not committed** (`.gitignore`: `apps/web/public/img/credential/*png`), so
+`make all` and `make prod` run `make credential-icons` (after `pnpm i`) to leave them in
+place on every deploy; running the target by hand does the same.
+
+That step is safe on a site that already works: it **never overwrites an existing PNG**
+(only `--force` does) and it runs with `--allow-offline`, so a build without the database
+or without `rsvg-convert` prints a warning and continues instead of aborting the deploy.
+
+Tokens without a course (the donor and role badges, `1`–`8`) have no source SVG in the
+repo: their composed badge only exists after `eng:credentials:recompose-image`, which
+needs the deployments. The script reports them instead of inventing art, so the build
+still succeeds.
+
+---
+
 ## 4. Set Site Base URI
 
 So wallets and explorers can resolve metadata:

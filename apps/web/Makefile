@@ -33,6 +33,15 @@ wait-site:
 diagrams:
 	node bin/mmd2svg.mjs --scan ../../resources --out public/img/diagrams --theme neutral
 
+# PNG de las credenciales (R-#161 §7): `credential_metadata.image_url` promete
+# public/img/credential/<token>.png y esos PNG están en .gitignore, así que se generan en
+# el despliegue desde las insignias/SVG. Los tokens sin arte de origen (1–8, insignias de
+# donante/rol) se informan y no rompen el build.
+credential-icons:
+	@# Nunca sobrescribe un PNG existente (sólo crea los que faltan) y, sin base o sin
+	@# `rsvg-convert`, avisa y sigue: este paso no puede tumbar el despliegue.
+	node bin/credential-icons.mjs --allow-offline
+
 # Motores (https://gitlab.com/pasosdeJesus/m/-/work_items/35 Fase 4): consumidos vía dist/ (exports map); dist/ no está en
 # git. Compilar antes del build — un checkout fresco no resuelve
 # @learn-tg/{rewards,gdcluster} sin esto. Orden: rewards antes que gdcluster.
@@ -98,7 +107,7 @@ all: build-guard engines-assets pwa-clean
 	# enlace en `node_modules` tras instalar (miembro del workspace
 	# `packages/generated/msip`). Compilar antes falla con TS2307.
 	(cd ../.. && pnpm i)
-	$(MAKE) engines-dist diagrams
+	$(MAKE) engines-dist diagrams credential-icons
 	$(MAKE) next-patch-check swc-wasm
 	# Máquina real: 16G RAM + swap, otras apps. 15 workers × heap grande = OOM.
 	# 8 workers × 2048 MB (webpack.parallelism en next.config.ts, https://gitlab.com/pasosdeJesus/m/-/work_items/35 gate).
@@ -219,7 +228,7 @@ dev:
 
 prod: build-guard engines-assets pwa-clean
 	(cd ../.. && pnpm i)
-	$(MAKE) engines-dist diagrams next-patch-check swc-wasm
+	$(MAKE) engines-dist diagrams credential-icons next-patch-check swc-wasm
 	NODE_OPTIONS="--max-old-space-size=2048" WEBPACK_PARALLELISM=8 sh bin/build
 	./bin/start > prod.log 2>&1 &
 
