@@ -220,10 +220,11 @@ That step is safe on a site that already works: it **never overwrites an existin
 (only `--force` does) and it runs with `--allow-offline`, so a build without the database
 or without `rsvg-convert` prints a warning and continues instead of aborting the deploy.
 
-Tokens without a course (the donor and role badges, `1`–`8`) have no source SVG in the
-repo: their composed badge only exists after `eng:credentials:recompose-image`, which
-needs the deployments. The script reports them instead of inventing art, so the build
-still succeeds.
+Tokens without a course (`1`–`8` here) are **not learn.tg credentials**: the contract
+registry also holds the types of other projects (sivel3's participation badges), and their
+image is not learn.tg's to serve. The script lists them as skipped and never invents art,
+so the build still succeeds; the only credential PNG learn.tg needs is the course one
+(token 13 in development, see `--list`).
 
 ---
 

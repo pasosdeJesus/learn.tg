@@ -121,7 +121,7 @@ function svgFor(tokenId, rows, course) {
     ? readdirSync(SOURCE_DIR).find((file) => wanted && normalized(file) === wanted)
     : null
   if (match) return { svg: join(SOURCE_DIR, match), from: `source (${match})` }
-  return { svg: null, from: 'sin fuente (recomponer con deployments)' }
+  return { svg: null, from: 'sin curso ni arte de origen (credencial de otro sitio)' }
 }
 
 function main() {
@@ -164,7 +164,10 @@ function main() {
         continue
       }
       if (!svg) {
-        console.log(`[SKIP] ${label}: sin SVG de origen; recomponer con deployments y \`eng:credentials:recompose-image\``)
+        // Sin curso ni arte de origen: no es una credencial de este sitio (el registro
+        // incluye los tipos de otros proyectos, p. ej. las insignias de participación de
+        // sivel3 en 1–8). No le toca a learn.tg presentar su imagen.
+        console.log(`[SKIP] ${label}: sin curso ni arte de origen (credencial de otro sitio); se omite`)
         problems.push(token)
         continue
       }
@@ -183,13 +186,15 @@ function main() {
 
     if (list) {
       console.log(
-        `\n${byToken.size} token(s); ${problems.length ? `${problems.length} sin PNG ni SVG de origen: ${problems.join(', ')}` : 'todos con PNG o con SVG de origen'}`,
+        `\n${byToken.size} token(s); ${problems.length ? `${problems.length} sin curso ni arte de origen (credenciales de otro sitio, p. ej. sivel3): ${problems.join(', ')}` : 'todos con PNG o con SVG de origen'}`,
       )
       return
     }
     console.log(`\n[DONE] ${byToken.size} token(s): ${generated} generados, ${skipped} ya existían, ${problems.length} sin resolución`)
     if (problems.length) {
-      console.log(`       sin resolver: ${problems.join(', ')} (necesitan la insignia compuesta: deployments + eng:credentials:recompose-image)`)
+      console.log(
+        `       sin resolver: ${problems.join(', ')} (sin curso ni arte de origen: credenciales de otro sitio en el registro)`,
+      )
     }
   })
 }
