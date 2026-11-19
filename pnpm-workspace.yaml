@@ -68,4 +68,4 @@ overrides:
   '@pasosdejesus/m': ^0.38.0
 
 patchedDependencies:
-  next@16.3.5: apps/web/patches/next@16.3.5.patch
+  next@16.3.5: apps/web/patches/next@16.3.5-pr100607.patch

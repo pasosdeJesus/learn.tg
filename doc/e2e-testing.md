@@ -688,9 +688,12 @@ sometimes does not paint (measured 2026-09-20: `invalid type: boolean 'false',
 expected enum CodeFrameColorMode`) and neither the route's `console.error` nor
 the error page reach the console. **The underlying cause is patched** since
 2026-09-27 (https://github.com/pasosdeJesus/learn.tg/issues/267):
-`apps/web/patches/next@16.3.5.patch` normalizes the options before the WASM
-binding (`color: false` is dropped, `color: true` → `'Error'`, `maxWidth:
-undefined` → `100`), so the overlay paints again; see R-#267 §6 to regenerate it.
+`apps/web/patches/next@16.3.5-pr100607.patch` normalizes in the WASM wrapper
+(`dist/build/swc/index.js`): it mirrors the napi defaults (`color` enum, `maxWidth`
+240, lines 2/3, `language`) and strips `undefined` fields before
+`serde_wasm_bindgen` (the equivalent of
+[vercel/next.js#100607](https://github.com/vercel/next.js/pull/100607)), so the
+overlay paints again; see R-#267 §6 to regenerate it.
 
 Since 2026-09-20:
 

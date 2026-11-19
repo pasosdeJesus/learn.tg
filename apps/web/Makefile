@@ -244,11 +244,13 @@ swc-wasm:
 # enum (`None|Error|Warning|Info`) y `maxWidth` numérico, y Next le pasa `false` /
 # `undefined`. Sin el parche, cualquier 500 en `next dev` se reporta como
 # "invalid type: boolean `false`, expected enum CodeFrameColorMode" (o "unit value")
-# y la causa real no se ve.
+# y la causa real no se ve. El parche normaliza en `loadWasm` (equivalente a
+# https://github.com/vercel/next.js/pull/100607): rellena los defaults de napi y
+# quita los `undefined` antes de serde_wasm_bindgen.
 #
 # Se aplica SOLO: `pnpm install` lo toma de `patchedDependencies`
 # en `pnpm-workspace.yaml`
-# (`patches/next@16.3.5.patch`, con su hash en pnpm-lock.yaml). Este target sirve
+# (`patches/next@16.3.5-pr100607.patch`, con su hash en pnpm-lock.yaml). Este target sirve
 # para aplicarlo a mano y comprobar que quedó; para REGENERAR el parche ver
 # https://github.com/pasosdeJesus/learn.tg/issues/267 (no editar node_modules a mano:
 # pnpm usa enlaces duros y el store queda sucio, ERR_PNPM_PATCH_FAILED).
@@ -258,16 +260,20 @@ next-patch:
 	@$(MAKE) next-patch-check
 
 next-patch-check:
-	@for f in node_modules/next/dist/shared/lib/errors/code-frame.js \
-	          node_modules/next/dist/esm/shared/lib/errors/code-frame.js; do \
-	  grep -q "maxWidth !== 'number'" "$$f" 2>/dev/null || { \
+	@for f in node_modules/next/dist/build/swc/index.js \
+	          node_modules/next/dist/esm/build/swc/index.js; do \
+	  grep -q "function getCodeFrameOptions" "$$f" 2>/dev/null || { \
 	    echo "ERROR: el parche de Next no está aplicado en $$f"; \
 	    echo "  Aplícalo con: cd apps/web && pnpm install"; \
 	    echo "  Si pnpm falla con ERR_PNPM_PATCH_FAILED: ver https://github.com/pasosdeJesus/learn.tg/issues/267."; \
 	    exit 1; \
 	  }; \
 	done
-	@echo "[next-patch] aplicado (patches/next@16.3.5.patch)"
+	@# El grep de arriba sólo prueba que el parche entró. Esto prueba que los code frames
+	@# renderizan con el binding WASM (R-#302, vercel/next.js#99348): si el binding
+	@# rechaza las opciones, el error real de `next dev`/`next build` se pierde.
+	@node bin/check-next-codeframe.mjs
+	@echo "[next-patch] aplicado (patches/next@16.3.5-pr100607.patch)"
 
 # ── E2E Tests ───────────────────────────────────────────────────────────
 

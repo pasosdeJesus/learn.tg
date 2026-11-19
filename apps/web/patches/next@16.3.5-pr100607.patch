@@ -1,0 +1,104 @@
+diff --git a/dist/build/swc/index.js b/dist/build/swc/index.js
+--- a/dist/build/swc/index.js
++++ b/dist/build/swc/index.js
+@@ -998,6 +998,39 @@
+         }
+         return newObj;
+     }
++    function getCodeFrameOptions(options = {}) {
++        let color;
++        switch(options.color){
++            case true:
++            case 0:
++            case 'Error':
++                color = 'Error';
++                break;
++            case 1:
++            case 'Warning':
++                color = 'Warning';
++                break;
++            case 2:
++            case 'Info':
++                color = 'Info';
++                break;
++            case false:
++            case 'None':
++            case undefined:
++            default:
++                color = 'None';
++                break;
++        }
++        return {
++            ...options,
++            linesAbove: options.linesAbove ?? 2,
++            linesBelow: options.linesBelow ?? 3,
++            maxWidth: options.maxWidth ?? 240,
++            color,
++            highlightCode: options.highlightCode ?? color !== 'None',
++            language: options.language === 'css' ? 'css' : 'javaScript'
++        };
++    }
+     // Note wasm binary does not support async intefaces yet, all async
+     // interface coereces to sync interfaces.
+     let wasmBindings = {
+@@ -1111,7 +1144,7 @@
+             return rawBindings.expandNextJsTemplate(content, templatePath, nextPackageDirPath, replacements, injections, imports);
+         },
+         codeFrameColumns (source, location, options) {
+-            return rawBindings.codeFrameColumns(Buffer.from(source), location, options);
++            return (rawBindings.codeFrameColumns(Buffer.from(source), removeUndefined(location), removeUndefined(getCodeFrameOptions(options))) ?? undefined);
+         },
+         lockfileTryAcquire (_filePath, _content) {
+             throw Object.defineProperty(new Error('`lockfileTryAcquire` is not supported by the wasm bindings.'), "__NEXT_ERROR_CODE", {
+diff --git a/dist/esm/build/swc/index.js b/dist/esm/build/swc/index.js
+--- a/dist/esm/build/swc/index.js
++++ b/dist/esm/build/swc/index.js
+@@ -879,6 +879,39 @@
+         }
+         return newObj;
+     }
++    function getCodeFrameOptions(options = {}) {
++        let color;
++        switch(options.color){
++            case true:
++            case 0:
++            case 'Error':
++                color = 'Error';
++                break;
++            case 1:
++            case 'Warning':
++                color = 'Warning';
++                break;
++            case 2:
++            case 'Info':
++                color = 'Info';
++                break;
++            case false:
++            case 'None':
++            case undefined:
++            default:
++                color = 'None';
++                break;
++        }
++        return {
++            ...options,
++            linesAbove: options.linesAbove ?? 2,
++            linesBelow: options.linesBelow ?? 3,
++            maxWidth: options.maxWidth ?? 240,
++            color,
++            highlightCode: options.highlightCode ?? color !== 'None',
++            language: options.language === 'css' ? 'css' : 'javaScript'
++        };
++    }
+     // Note wasm binary does not support async intefaces yet, all async
+     // interface coereces to sync interfaces.
+     let wasmBindings = {
+@@ -992,7 +1025,7 @@
+             return rawBindings.expandNextJsTemplate(content, templatePath, nextPackageDirPath, replacements, injections, imports);
+         },
+         codeFrameColumns (source, location, options) {
+-            return rawBindings.codeFrameColumns(Buffer.from(source), location, options);
++            return (rawBindings.codeFrameColumns(Buffer.from(source), removeUndefined(location), removeUndefined(getCodeFrameOptions(options))) ?? undefined);
+         },
+         lockfileTryAcquire (_filePath, _content) {
+             throw Object.defineProperty(new Error('`lockfileTryAcquire` is not supported by the wasm bindings.'), "__NEXT_ERROR_CODE", {

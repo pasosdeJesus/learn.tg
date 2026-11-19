@@ -170,14 +170,17 @@ Then edit `.env` with your values. Key variables:
 
 ### Next.js patch (OpenBSD)
 
-`patches/next@16.3.5.patch` (https://github.com/pasosdeJesus/learn.tg/issues/267)
+`patches/next@16.3.5-pr100607.patch` (https://github.com/pasosdeJesus/learn.tg/issues/267)
 fixes `codeFrameColumns` so a 500 shows its real cause instead of crashing. It is
 applied **only** by `pnpm install` (declared in `patchedDependencies` of
 `pnpm-workspace.yaml`); never
 edit `node_modules` by hand. `make next-patch` re-applies it with `pnpm install` and
 then checks it, `make next-patch-check` only checks (it fails if the installed
-`node_modules` has the old code), and `make all`/`make prod` verify it before
-building. To regenerate it, see the requirement §6 and `CONTRIBUTING.md`.
+`node_modules` has the old code, and it also runs `bin/check-next-codeframe.mjs`, which
+loads the WASM bindings and renders eight code-frame shapes — so it proves the patch
+*works*, not just that it landed; the same check is a regression test,
+`lib/__tests__/next-codeframe-wasm.test.ts`, inside `make test`), and `make all`/`make prod`
+verify it before building. To regenerate it, see the requirement §7 and `CONTRIBUTING.md`.
 
 ## Available Pages and Routing
 

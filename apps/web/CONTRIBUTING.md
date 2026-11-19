@@ -259,11 +259,12 @@ pnpm test:ui        # Interactive Vitest UI
 
 # ── Entorno OpenBSD (Next 16) ──
 make next-patch       # Re-aplica el parche de Next (pnpm install) y comprueba que quedó
-make next-patch-check # Sólo comprueba (falla si node_modules trae el parche viejo)
+make next-patch-check # Sólo comprueba: el parche está y los code frames renderizan
+                      # (mismo módulo que la prueba de regresión, sin Vitest)
 ```
 
-El parche de Next (`patches/next@16.3.5.patch`,
-https://github.com/pasosdeJesus/learn.tg/issues/267) se aplica **solo** con
+El parche de Next (`patches/next@16.3.5-pr100607.patch`,
+https://github.com/pasosdeJesus/learn.tg/issues/302) se aplica **solo** con
 `pnpm install`; `make next-patch` es para aplicarlo a mano y comprobarlo, y
 `make all`/`make prod` ya lo verifican antes de compilar. Para regenerarlo, ver el
 issue (nunca editar `node_modules` a mano).
