@@ -33,7 +33,7 @@ async function main() {
   resetFailures()
 
   // El iniciador necesita el curso GD; los otros dos puestos se crean si faltan.
-  const picked = resolveClusterPastors({ count: 3 })
+  const picked = await resolveClusterPastors({ count: 3 })
   if (picked.missing) {
     console.log(`[SKIP] ${picked.reason}`)
     process.exit(0)
@@ -146,10 +146,19 @@ async function main() {
 
   // ── 4. Billetera y fase `wallet` ────────────────────────────────────
   console.log('\n── 4. Aprobación de la billetera ──')
-  const saved = await initiator.api(`/api/cluster/${clusterId}`, {
+  // La iglesia iniciadora puede traer la billetera de un ciclo anterior **con saldo** en
+  // ClusterFundsV2 (las billeteras del registro se reutilizan): la API contesta
+  // 409 `cluster_wallet_has_funds` y pide `confirmMigrate` para cambiarla, porque el saldo
+  // viejo no se mueve (R-#220 §4). Se confirma y se sigue.
+  const setWallet = (extra = {}) => initiator.api(`/api/cluster/${clusterId}`, {
     method: 'PATCH',
-    body: JSON.stringify({ walletAddress: initiator.pastor.address, clusterWallet: initiator.pastor.address }),
+    body: JSON.stringify({ walletAddress: initiator.pastor.address, clusterWallet: initiator.pastor.address, ...extra }),
   })
+  let saved = await setWallet()
+  if (saved.status === 409 && saved.body?.code === 'cluster_wallet_has_funds') {
+    ok('la billetera anterior tenía fondos: se confirma el cambio (409 cluster_wallet_has_funds)')
+    saved = await setWallet({ confirmMigrate: true })
+  }
   if (saved.status === 200) ok('el iniciador fijó la billetera del clúster')
   else fail(`no se pudo fijar la billetera (${saved.status} ${JSON.stringify(saved.body).slice(0, 120)})`)
 

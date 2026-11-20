@@ -19,8 +19,13 @@
 // `missing`, and the caller skips with the instruction to create one with
 // `FUND_FRESH=1 make test-e2e-spec SPEC=premium-course-checkout`, which buys the
 // course for a new wallet and marks it in this same registry.
+//
+// Ese paso ya no se le pide al operador: si no hay iniciador, esta función compra el
+// curso sola (`ensureCoursePastors`, el mismo camino del comando manual) y vuelve a
+// elegir. Si la compra falla se devuelve `missing` y el llamador omite el spec.
 import { createTestWallet } from './in-app-wallet.mjs'
 import { listWallets, markWalletUsed, recentByRole, rememberWallet } from './e2e-wallets-registry.mjs'
+import { ensureCoursePastors, freeCoursePastors } from './seed-course-pastor.mjs'
 
 function credentials(row) {
   return {
@@ -33,9 +38,15 @@ function credentials(row) {
 
 /**
  * Picks `count` pastors for a cluster, reusing the registry.
- * @returns {{ pastors: any[], missing: number, reason?: string }}
+ * Compra el curso si falta el iniciador (`autoSeed`, apagable en pruebas).
+ * @returns {Promise<{ pastors: any[], missing: number, reason?: string }>}
  */
-export function resolveClusterPastors({ count = 3, destructive = false, exclude = [] } = {}) {
+export async function resolveClusterPastors({ count = 3, destructive = false, exclude = [], autoSeed = true } = {}) {
+  // Sin pastor con curso no hay quien cree el clúster: se compra uno antes de elegir
+  // (no se pide al operador que corra premium-course-checkout a mano).
+  if (autoSeed && freeCoursePastors().filter((row) => !row.clusterCompletedAt).length === 0) {
+    ensureCoursePastors(1)
+  }
   // `exclude`: direcciones que no se deben tomar (los pastores que ya usó otro
   // clúster en la misma corrida, p. ej. el reparto entre A y B).
   // Wallets owned by the other cluster specs are usually still inside a cluster (or
@@ -104,7 +115,7 @@ export function resolveClusterPastors({ count = 3, destructive = false, exclude 
     pastors: chosen.slice(0, count).map(credentials),
     missing,
     reason: missing
-      ? 'no hay un pastor con el curso GD sin ciclo cerrado en el registro; crea uno con FUND_FRESH=1 make test-e2e-spec SPEC=premium-course-checkout'
+      ? 'no hay un pastor con el curso GD sin ciclo cerrado y la compra automática no agregó ninguno (mira los fondos del fixture y la bóveda del curso)'
       : undefined,
   }
 }

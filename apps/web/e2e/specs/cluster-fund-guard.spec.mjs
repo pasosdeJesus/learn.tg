@@ -28,7 +28,7 @@ async function main() {
   const t0 = performance.now()
   resetFailures()
 
-  const picked = resolveClusterPastors({ count: 3 })
+  const picked = await resolveClusterPastors({ count: 3 })
   const pastors = picked.pastors
   if (picked.missing) {
     console.log(`[SKIP] ${picked.reason}`)

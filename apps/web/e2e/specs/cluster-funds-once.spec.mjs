@@ -37,7 +37,7 @@ async function main() {
 
   // Pastors come from the local registry (reuse first, create only when needed);
   // answering GD spends the ones it uses (`cluster_completed` is permanent).
-  const picked = resolveClusterPastors({ count: 3, destructive: true })
+  const picked = await resolveClusterPastors({ count: 3, destructive: true })
   const pastors = picked.pastors
   if (picked.missing) {
     console.log(`[SKIP] ${picked.reason}`)
@@ -97,6 +97,19 @@ async function main() {
     summary(t0)
     await browser.close()
     return
+  }
+  // El clúster se presenta cuando su fondo recibe el 10 % de las becas de sus iglesias
+  // (REQ/161 §4.7). Con billeteras reutilizadas las becas ya estaban pagadas, no entra ese
+  // 10 % y la tercera aprobación de datos —que *es* la solicitud a pdJ— queda en
+  // `cluster_fund_empty`. Sin solicitud no hay nada que contar aquí (ese caso lo cubre
+  // `cluster-fund-guard`), así que se omite en vez de fallar.
+  if (prepared.fundEmpty) {
+    console.log(
+      '  [SKIP] el fondo del clúster quedó vacío: las becas de sus pastores ya estaban pagadas, ' +
+        'así que no entró el 10 % y la solicitud a pdJ se omite',
+    )
+    await browser.close()
+    process.exit(0)
   }
   const { clusterId, sessions, verifierPage } = prepared
   const initiator = sessions[0]

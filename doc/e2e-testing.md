@@ -508,10 +508,12 @@ await connectExternalWallet(page)   // R-#265 §3.9: header = WalletConnect; ope
   registry fields `hasGdCourse` and `clusterCompletedAt` are what make this work: answering
   Global Disciples completes a church's cycle for good (`cluster_completed`), so a spec that
   drives a cluster to `answered` marks its pastors (`markClusterCompleted`) and the next runs
-  take others. Buying the course is the one step not automated: when no pastor owns it the specs
-  print `[SKIP]` with the instruction to create one with
-  `FUND_FRESH=1 make test-e2e-spec SPEC=premium-course-checkout`, which buys it for real and
-  marks the wallet (`markGdCourse`).
+  take others. **Buying the course is automatic**: when no pastor owns it,
+  `resolveClusterPastors` calls `ensureCoursePastors` (`e2e/helpers/seed-course-pastor.mjs`),
+  which buys one with `FUND_FRESH=1 premium-course-checkout` before picking. If that purchase
+  fails (fixture wallet without funds, course vault empty) the specs print `[SKIP]` instead of
+  buying in a loop. `node bin/e2e-seed-course-pastors.mjs <n>` runs the same function ahead of
+  time; it is a shortcut, not a prerequisite.
 - `e2e/helpers/in-app-wallet.mjs` keeps only what is app-specific: that SIWE
   sign-in and the dialog/header drivers (`chooseWalletProtection`,
   `completeBackupVerification`, `waitForExternalConnect`). The wallet mock comes

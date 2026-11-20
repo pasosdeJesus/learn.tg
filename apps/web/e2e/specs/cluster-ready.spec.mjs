@@ -21,7 +21,7 @@ async function main() {
 
   // Pastors come from the local registry (reuse first, create only when needed);
   // answering GD spends the ones it uses (`cluster_completed` is permanent).
-  const picked = resolveClusterPastors({ count: 3 })
+  const picked = await resolveClusterPastors({ count: 3 })
   const pastors = picked.pastors
   if (picked.missing) {
     console.log(`[SKIP] ${picked.reason}`)

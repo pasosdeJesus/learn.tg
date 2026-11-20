@@ -243,7 +243,7 @@ async function main() {
   const used = new Set()
   try {
     for (const side of ['A', 'B']) {
-      const picked = resolveClusterPastors({ count: 3, destructive: true, exclude: [...used] })
+      const picked = await resolveClusterPastors({ count: 3, destructive: true, exclude: [...used] })
       if (picked.missing) {
         console.log(`[SKIP] ${picked.reason}`)
         await browser.close()
