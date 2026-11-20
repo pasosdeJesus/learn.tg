@@ -437,8 +437,9 @@ hardcoded a score). Their coverage — SIWE, session cookie, profile — comes f
 Puppeteer through `@pasosdejesus/m/e2e` (`initTestEnv`, `launchBrowser`,
 `ok`/`fail`/`summary`). 53 specs as of 2026-11-07. **They are not read-only**:
 they register wallets, complete profiles, claim UBI, donate and buy (see §2.2),
-except `guide-citations.spec.mjs`, which only opens guides and reads their text
-(it checks that every guide keeps its `chapter:verse` citations).
+except `guide-citations.spec.mjs` and `guide-pages.spec.mjs`, which only open guides
+and read their text (citations with `chapter:verse`; sections, images, links and the
+removed 6-character code).
 
 `guide-diagrams.spec.mjs` is the other exception and needs **no browser and no
 session**: it reads every ` ```mermaid ` block of `resources/`, computes the
@@ -448,6 +449,17 @@ fetches each one from the site under test, expecting `image/svg+xml` and a real
 checked, not just the status). It takes under 2 s and catches the case this suite hit
 on 2026-11-19: the guides deployed without their Spanish diagrams — 7 of 12 present,
 5 soft 404s, and nothing else complained.
+
+`guide-pages.spec.mjs` closes the loop from the browser: with a wallet from the
+registry that owns the GD course, it opens the 12 guides and requires, per guide, at
+least one `<h2>`, one image per ` ```mermaid ` block of the Markdown with
+`naturalWidth > 0` (the renderer resolved the diagram to a **loaded** SVG), a link to
+the cluster page or to another guide, and no trace of the 6-character code that
+R-#299 removed. It is the browser counterpart of `guides-content.test.ts`: that one
+reads the repository, this one reads what the site serves. The courses are bought
+**per language** (10 English, 11 Spanish), so a language without the purchase shows
+the premium card and is reported as `[SKIP]` of that language, not as a failure.
+About 30 s with one language, ~90 s with both.
 
 ### 5.1 Wallet in the specs (R-#239 / R-#284)
 

@@ -20,14 +20,10 @@ const LANG = process.env.E2E_LANG === 'es' ? 'es' : 'en'
 const COURSE = LANG === 'es' ? 'redgd' : 'gdcluster'
 const LABELS = {
   en: {
-    requestBox: 'Request the presentation to Global Disciples',
-    requestButton: 'Send request',
     gd: 'GD',
     save: 'Save',
   },
   es: {
-    requestBox: 'Solicitar la presentación a Global Disciples',
-    requestButton: 'Enviar solicitud',
     gd: 'GD',
     save: 'Guardar',
   },
@@ -103,52 +99,25 @@ async function main() {
   const wallet = initiator.pastor.address
   console.log(`  [info] clúster #${clusterId}`)
 
-  // ── 2. El iniciador solicita la presentación (página del curso) ─────
+  // ── 2. La solicitud ya la hizo el iniciador al aprobar los datos ────
   console.log('\n── 2. Solicitud del iniciador ──')
-  // La solicitud se hace desde la página del clúster (el panel es del iniciador); el
-  // control de la página del curso solo sirve cuando aún no hay datos.
-  const requestLabel = LANG === 'es'
-    ? '¿Solicitar la presentación a Global Discip'
-    : 'Request the presentation to Global Discip'
-  for (let attempt = 0; attempt < 2; attempt++) {
-    await initiator.page.goto(`${base}/${LANG}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded' })
-    await initiator.page.waitForFunction(
-      (label) => (document.body?.innerText || '').includes(label),
-      { timeout: 90000 },
-      requestLabel,
-    ).catch(() => {})
-    const hasCheckbox = await initiator.page.evaluate(
-      () => !!document.querySelector('input[type="checkbox"]'),
-    )
-    if (hasCheckbox) break
-    console.log('  [retry] el panel aún no muestra la casilla de solicitud')
-    await new Promise((r) => setTimeout(r, 5000))
-  }
-  const checked = await initiator.page.evaluate((label) => {
-    const box = Array.from(document.querySelectorAll('input[type="checkbox"]'))
-      .find((input) => ((input.closest('label')?.textContent || '').trim()).includes(label.slice(0, 20)))
-      || document.querySelector('input[type="checkbox"]')
-    if (!box || box.disabled) return false
-    box.click()
-    return true
-  }, requestLabel)
-  if (checked) ok('casilla de la solicitud marcada')
-  else fail('no se encontró la casilla de la solicitud')
+  // Desde REQ/161 §4.7 la solicitud a pdJ **es** la tercera aprobación de datos de los
+  // pastores (`cluster-ready-fixture` la marca), así que el panel del iniciador ya no
+  // muestra la casilla "Solicitar la presentación": muestra "Presentación solicitada".
+  // El spec comprobaba la casilla y el botón de envío, que sólo existen en un clúster
+  // listo y sin solicitud: fallaba siempre desde que el fixture hace la solicitud.
+  await initiator.page.goto(`${base}/${LANG}/cluster`, { waitUntil: 'domcontentloaded' })
+  const alreadyRequested = await initiator.page.waitForFunction(
+    (label) => (document.body?.innerText || '').includes(label),
+    { timeout: 90000 },
+    LANG === 'es' ? 'Presentación solicitada' : 'Presentation requested',
+  ).then(() => true).catch(() => false)
+  if (alreadyRequested) ok('el panel muestra la presentación solicitada')
+  else fail('el panel del iniciador no muestra la presentación como solicitada')
 
-  const requested = await initiator.page.evaluate((label) => {
-    const button = Array.from(document.querySelectorAll('button'))
-      .find((b) => (b.textContent || '').trim() === label && !b.disabled)
-    if (!button) return false
-    button.click()
-    return true
-  }, t.requestButton)
-  if (requested) ok('botón de solicitar pulsado')
-  else fail('no se encontró el botón de solicitar (¿sigue deshabilitado?)')
-
-  await new Promise((r) => setTimeout(r, 4000))
   let state = await stateOf(initiator.page, clusterId, wallet)
   if (state.request?.status === 'requested') ok('estado `requested`')
-  else fail(`estado tras solicitar: ${state.request?.status}`)
+  else fail(`estado tras la solicitud: ${state.request?.status}`)
   if (state.request?.locked === true) ok('los datos quedaron fijos')
   else fail('los datos no aparecen fijos')
 
@@ -192,7 +161,7 @@ async function main() {
 
   // ── 4. El iniciador corrige (invalida las aprobaciones) ─────────────
   console.log('\n── 4. Corrección del iniciador ──')
-  await initiator.page.goto(`${base}/${LANG}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded' })
+  await initiator.page.goto(`${base}/${LANG}/cluster`, { waitUntil: 'domcontentloaded' })
   await initiator.page.waitForFunction(
     () => document.querySelectorAll('input[type="number"]').length >= 3,
     { timeout: 45000 },
@@ -220,7 +189,7 @@ async function main() {
   // ── 5. Los pastores aprueban otra vez ───────────────────────────────
   console.log('\n── 5. Nuevas aprobaciones ──')
   for (const session of sessions) {
-    await session.page.goto(`${base}/${LANG}/cluster/${clusterId}`, { waitUntil: 'domcontentloaded' })
+    await session.page.goto(`${base}/${LANG}/cluster`, { waitUntil: 'domcontentloaded' })
     await session.page.waitForFunction(
       () => Array.from(document.querySelectorAll('button')).some((b) => /i know and approve|conozco y apruebo/i.test(b.textContent || '')),
       { timeout: 45000 },
@@ -235,7 +204,10 @@ async function main() {
 
   // ── 6. El verificador aprueba y marca `sent` ────────────────────────
   console.log('\n── 6. Aprobación y envío ──')
-  for (const next of ['approved', 'sent']) {
+  // Las transiciones reales del verificador (`app/[lang]/admin/clusters/page.tsx`):
+  // `requested → under_review → returned | sent`, y `returned → under_review → sent`.
+  // `approved` desapareció del flujo: no existe como estado del formulario.
+  for (const next of ['under_review', 'sent']) {
     const advanced = await openGdForm(verifierPage, base, LANG, clusterId, t.gd)
     if (!advanced) {
       fail(`no se pudo abrir el formulario para ${next}`)

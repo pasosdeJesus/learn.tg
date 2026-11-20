@@ -331,12 +331,22 @@ async function main() {
 
   // ── 4. Billetera del clúster (validación) ──────────────────────────
   console.log('\n── 4. Billetera del clúster (validación) ──')
+  // La billetera puede estar ya **fija** (aprobación del iniciador, REQ/161 §4.7) o
+  // **con fondos** en ClusterFundsV2 (R-#220 §4): en los dos casos la API contesta 409
+  // antes de validar la dirección nueva, y eso también es negar el cambio. Se nombra el
+  // código observado para no dar por buena una validación que no llegó a correr.
+  const walletRefusal = (response) => {
+    if (response.status === 400) return null
+    const code = response.body?.code
+    if (response.status === 409 && (code === 'gd_fields_locked' || code === 'cluster_wallet_has_funds')) return code
+    return undefined
+  }
   const invalid = await api(`/api/cluster/${clusterId}`, {
     method: 'PATCH',
     body: JSON.stringify({ walletAddress: wallet, clusterWallet: 'no-es-una-direccion' }),
   })
   if (invalid.status === 400) ok('billetera inválida → 400')
-  else if (invalid.status === 409 && invalid.body?.code === 'gd_fields_locked') ok('la billetera ya está fija (409 gd_fields_locked)')
+  else if (walletRefusal(invalid)) ok(`la billetera no se puede cambiar (409 ${walletRefusal(invalid)})`)
   else fail(`billetera inválida → ${invalid.status}`)
 
   const zero = await api(`/api/cluster/${clusterId}`, {
@@ -344,16 +354,16 @@ async function main() {
     body: JSON.stringify({ walletAddress: wallet, clusterWallet: '0x0000000000000000000000000000000000000000' }),
   })
   if (zero.status === 400) ok('dirección cero → 400')
-  else if (zero.status === 409 && zero.body?.code === 'gd_fields_locked') ok('la billetera ya está fija (409 gd_fields_locked)')
+  else if (walletRefusal(zero)) ok(`la billetera no se puede cambiar (409 ${walletRefusal(zero)})`)
   else fail(`dirección cero → ${zero.status}`)
 
   const foreign = await api(`/api/cluster/${clusterId}`, {
     method: 'PATCH',
     body: JSON.stringify({ walletAddress: wallet, clusterWallet: '0x1111111111111111111111111111111111111111' }),
   })
-  if (foreign.status === 400) ok('billetera no registrada → 400')
-  else if (foreign.status === 409 && foreign.body?.code === 'gd_fields_locked') ok('la billetera ya está fija (409 gd_fields_locked)')
-  else fail(`billetera no registrada → ${foreign.status}`)
+  if (foreign.status === 400) ok('una billetera ajena → 400')
+  else if (walletRefusal(foreign)) ok(`la billetera no se puede cambiar (409 ${walletRefusal(foreign)})`)
+  else fail(`una billetera ajena → ${foreign.status} ${JSON.stringify(foreign.body).slice(0, 120)}`)
 
   // ── 4b. Presupuesto del cuarto año (API) ───────────────────────────
   // Verifica el renombre `first_year_budget` → `fourth_year_budget` en el motor y en
