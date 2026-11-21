@@ -110,6 +110,10 @@ node bin/mmd2svg.mjs --scan ../../resources --out public/img/diagrams --theme ne
   the build with its SVG.
 - A standalone `.mmd` still works (`node bin/mmd2svg.mjs diagrama.mmd salida.svg`), for diagrams
   outside a guide.
+- Two E2E checks close the loop: `make test-e2e-spec SPEC=guide-diagrams` fetches every SVG from the
+  **deployed** site (a guide can travel without its image and nothing else complains) and
+  `SPEC=guide-pages` opens the pages with a wallet that owns the course and requires each diagram's
+  `<img>` to have `naturalWidth > 0` (the renderer resolved the block to a loaded file).
 
 ## Database
 

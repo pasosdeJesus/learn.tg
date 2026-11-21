@@ -354,6 +354,20 @@ duplicated routes. Implemented (2026-08-31, migration
   **fixed** and neither the initiator nor the verifier can change it (`409 gd_fields_locked`,
   also in `PATCH /api/admin/church/[id]`); an extreme case (a compromised wallet between the
   presentation and the release) is handled by support, editing the database directly.
+- **Two approval phases** (R-#161 §4.7): `wallet` first and `data` afterwards, in both
+  cases the initiator approves first (anyone else gets `409 initiator_must_approve_first`);
+  the initiator's wallet approval sets `wallet_fixed_at` and from there the wallet can no
+  longer be changed. The **third data approval is the request** to pdJ: there is no separate
+  "request" button, and the cluster goes to `requested` on its own.
+- **A wallet that still holds funds**: `PATCH /api/cluster/[id]` answers
+  `409 cluster_wallet_has_funds` with the amounts and only proceeds with
+  `confirmMigrate: true`; the change is recorded in `clustergd_history` and the previous
+  fund stays in the old address (the ranking stops showing it and the page cannot release it).
+- **The verifier's transitions** (`app/[lang]/admin/clusters/page.tsx`): `requested` →
+  `under_review` | `returned` | `cancelled`; `under_review` → `returned` | `sent`;
+  `returned` → `under_review` | `requested` | `sent`. **`approved` is not a state** (it was
+  removed); `returned` unlocks the budget and the director offer, the pastors approve again
+  and the cluster comes back as `requested`.
 - **The 10% of the cluster's students** (course purchases and guide scholarships) goes to
   the cluster fund while that fund exists. A cluster becomes **verified** in the contract
   when pdJ presents it (`sent`, "presented = verified"); it stays in the ranking (shown in

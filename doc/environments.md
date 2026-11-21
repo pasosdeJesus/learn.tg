@@ -582,6 +582,15 @@ node bin/warmup.mjs      # solo si el sitio se sirve con dev server; pre-compila
   ```
 - **Browser specs**: `PUERTOPRU=9001 CHAIN_ID=11142220 make test-e2e` (12s de
   aire entre specs vía `E2E_SPEC_DELAY_MS`).
+- **Esperar el despliegue** antes de correr specs: `EXPECT_CHANGE=1 TIMEOUT=1800
+  make wait-site`. Si el despliegue sólo agrega archivos a `public/` (diagramas,
+  PNG de credenciales) el marcador de build **no cambia**: usa
+  `EXPECT_ASSET=/img/diagrams/<hash>.svg make wait-site` o
+  `make test-e2e-spec SPEC=guide-diagrams` (detalle en `doc/e2e-testing.md` §3.5).
+- **Pastores con el curso GD**: los specs de clúster compran uno solos cuando el
+  registro no tiene ninguno (`resolveClusterPastors` → `ensureCoursePastors`, mueve
+  USDT/SLEARN de prueba). Para reponer de antemano:
+  `node bin/e2e-seed-course-pastors.mjs 3`.
 - **m ≥ 0.21**: `initTestEnv` lee `apps/.env` (billetera local registrada en el
   sitio), soporta `TEST_PRIVATE_KEYS` (multi-billetera), y el runner rota
   `WALLET_INDEX` por spec. Billeteras extra deben estar registradas en el sitio

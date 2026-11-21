@@ -17,6 +17,12 @@
     "apps/web/e2e/specs/vault-both-donate.spec.mjs": [
       "0x01a72816110a88883F79026C0199827fCF9184c8"
     ],
+    "apps/web/e2e/specs/cluster-page.spec.mjs": [
+      "0x1111111111111111111111111111111111111111"
+    ],
+    "apps/web/e2e/specs/cluster-three-pastors.spec.mjs": [
+      "0x1111111111111111111111111111111111111111"
+    ],
     "apps/web/e2e/specs/donate-campaign-real.spec.mjs": [
       "0x9c7218a253d1565fc5f2149ba51f0f55f0f27f07"
     ],

@@ -173,6 +173,19 @@ The public ranking (`/{lang}/gdcluster/ranking`, Clusters tab) also shows the
 status of each cluster, next to its alias and the fund columns, and each row links to the
 public page `/{lang}/clusters/{slug}`.
 
+The dialog only offers the transitions the flow allows (the list is in
+`app/[lang]/admin/clusters/page.tsx`), so **"approved" is not a state**:
+
+| From | You can move it to |
+|---|---|
+| `requested` | `under_review`, `returned` (with suggestions), `cancelled` |
+| `under_review` | `returned`, `sent` |
+| `returned` | `under_review`, `requested` (the initiator resubmits), `sent` |
+
+`returned` unlocks the budget and the director offer again; the pastors approve once more and
+the cluster comes back as `requested`. Sending the email is what makes it `sent`; the answer
+from GD closes it as `answered`, and that also releases the cluster fund.
+
 ## Issues to resolve (`/{lang}/admin/solves`)
 
 The dashboard widget **Issues to resolve** counts the open rows of `admin_solves`,
