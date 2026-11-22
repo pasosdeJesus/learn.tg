@@ -91,6 +91,28 @@ export function paidToOtherWallet(
   return null
 }
 
+/**
+ * R-#303: el enfriamiento de 24 h del contrato es **por dirección**
+ * (`studentCooldowns[courseId][student]`), así que otra billetera de la misma cuenta
+ * empieza limpia. El backend lo comprueba por **cuenta** con la última beca pagada de ese
+ * curso (fila de `transaction`, cualquier billetera).
+ *
+ * Puro y con el reloj inyectable: devuelve el texto del tiempo que falta (para el mensaje
+ * `cannotSubmit`) o `null` si se puede enviar.
+ */
+export function cooldownLeftText(
+  lastPaidAt: string | Date | null | undefined,
+  nowMs: number = Date.now(),
+  hours = 24,
+): string | null {
+  if (!lastPaidAt) return null
+  const paidAt = lastPaidAt instanceof Date ? lastPaidAt.getTime() : Date.parse(String(lastPaidAt))
+  if (!Number.isFinite(paidAt)) return null
+  const left = hours * 3_600_000 - (nowMs - paidAt)
+  if (left <= 0) return null
+  return ` (${Math.ceil(left / 3_600_000)} h)`
+}
+
 /** Entero con decimales → número (USDT 6, SLEARN 2). Sin `viem`, por el mismo motivo. */
 function toDecimal(raw: bigint, decimals: number): number {
   const divisor = 10n ** BigInt(decimals)

@@ -435,7 +435,7 @@ hardcoded a score). Their coverage — SIWE, session cookie, profile — comes f
 ## 5. Browser specs (`e2e/specs/`)
 
 Puppeteer through `@pasosdejesus/m/e2e` (`initTestEnv`, `launchBrowser`,
-`ok`/`fail`/`summary`). 60 specs as of 2026-11-20. **They are not read-only**:
+`ok`/`fail`/`summary`). 61 specs as of 2026-11-22. **They are not read-only**:
 they register wallets, complete profiles, claim UBI, donate and buy (see §2.2),
 except `guide-citations.spec.mjs` and `guide-pages.spec.mjs`, which only open guides
 and read their text (citations with `chapter:verse`; sections, images, links and the
@@ -568,6 +568,8 @@ and §2.4.
 | `celo-ubi-claim-sepolia.spec.mjs` | CELO UBI claim on Sepolia |
 | `church-persistence.spec.mjs` | Church data persistence in the profile |
 | `guide-claims.spec.mjs` | Guide completion and claim flow |
+| `scholarship-account-rules.spec.mjs` | R-#303: with a **second wallet linked to the same account** it pays one guide from the first wallet and proves the two per-account rules — the same guide from the second wallet answers `already_paid` ("another wallet"), and another guide of the same course is refused with the 24-hour cooldown message. Verifies the profile first (`profilescore` must be ≥ 50 or the scholarship is not paid), spends one testnet scholarship per run and buys the course when no account is left with two unpaid guides; it submits twice on purpose (wallet A → guide n, linked wallet B → guide n+1) and "
+      "uses a pre-existing cooldown as the starting state instead of skipping |
 | `crossword-submit-ends.spec.mjs` | F-#295: a crossword submission **always ends** — a wrong answer answers `200` with `points: 0` and `scholarship: 'not_paid'`, a correct one with `points: 1` and `scholarship` in `paid`/`already_paid`/`pending`/`not_paid`, both within `SUBMIT_BUDGET_MS` (45 s) and with the button leaving "Sending..." (~4 s each on the dev site; the GD course adds the two 10% transfers, bounded at 20 s). Walks `CROSSWORD_COURSES` (default `en/web3-and-ubi`, `en/a-relationship-with-Jesus`, `en/gdcluster`) until it finds a guide whose two scholarships are not paid; skips when there is none |
 | `cluster-formation.spec.mjs` | R-#220: admin list with search and status/country filters, cluster CRUD, member add/remove, `PUT` alias (slug) + status, the **status field and column** in the ranking (API and UI), the public `GET /api/clusters` and `GET /api/clusters/[slug]` (never the internal name) and that `POST /api/cluster/join` is gone, the admin clusters page (`/{lang}/admin/clusters`), the **"Your cluster" card** on the purchased GD course page, and the disband (soft delete + exclusion from the ranking). The 3-pastor invitation flow (accept/reject/activation at 3 churches) is covered by the engine's unit tests; the steps that need that fixture print `[SKIP]` when it is missing |
 | `cluster-page.spec.mjs` | R-#220/R-#161: the cluster page while the cluster is **forming** — alias and its validation, the cluster wallet validation (an invalid or zero address answers `400`; a valid-but-foreign one is refused too, and when the church's previous wallet still holds funds or the initiator already approved, the answer is `409 cluster_wallet_has_funds` / `409 gd_fields_locked`), the fourth-year budget field, the invitations section and what is out of scope. Needs a pastor with the GD course |

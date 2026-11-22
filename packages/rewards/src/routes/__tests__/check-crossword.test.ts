@@ -18,6 +18,8 @@ interface FakeOptions {
   completed?: number
   courseFlags?: Record<string, unknown> | null
   recorded?: Array<{ crypto: string; metadata: { guideId?: number }; wallet?: string }>
+  /** R-#303: `date` de la última beca de ese curso (null = nunca se pagó). */
+  lastPaidAt?: string | null
 }
 
 /**
@@ -101,6 +103,10 @@ function createFakeDb(options: FakeOptions = {}) {
       compileQuery: (node: any) => node,
       executeQuery: async (compiled: any) => {
         state.rawQueries.push(compiled)
+        // R-#303: el enfriamiento por cuenta consulta `max(date)` de las becas del curso.
+        if (String((compiled as any)?.sql ?? JSON.stringify(compiled)).includes('max(date)')) {
+          return { rows: [{ last: options.lastPaidAt ?? null }] }
+        }
         return { rows: guides }
       },
     }),
@@ -218,6 +224,58 @@ describe('checkCrosswordPost — scholarship section (engine)', () => {
     expect(submitScholarship).toHaveBeenCalledTimes(1)
     expect(state.transactions.map((row) => row.crypto)).toEqual(['usdt', 'slearn'])
     expect(json.message).toContain('You received 1.00 USDT')
+  })
+
+  // R-#303: el enfriamiento de 24 h del contrato es por **dirección**; con dos billeteras de
+  // la misma cuenta se esquiva. La ruta mira la cuenta en la base antes de la cadena.
+  it('refuses another guide of the same course within 24 hours of an account payment', async () => {
+    const twoHoursAgo = new Date(Date.now() - 2 * 3_600_000).toISOString()
+    const { deps, submitScholarship } = buildDeps({
+      db: createFakeDb({ lastPaidAt: twoHoursAgo }),
+    })
+
+    const res = await checkCrosswordPost(deps, buildRequest())
+    const json = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(json.scholarship).toBe('not_paid')
+    expect(json.message).toMatch(/waiting period of 24 hours/i)
+    expect(json.message).toMatch(/\d+ h/)
+    expect(submitScholarship).not.toHaveBeenCalled()
+  })
+
+  it('allows the submission once the account cooldown has passed', async () => {
+    const twentyFiveHoursAgo = new Date(Date.now() - 25 * 3_600_000).toISOString()
+    const { deps, submitScholarship } = buildDeps({
+      db: createFakeDb({ lastPaidAt: twentyFiveHoursAgo }),
+    })
+
+    const res = await checkCrosswordPost(deps, buildRequest())
+    const json = await res.json()
+
+    expect(json.scholarship).toBe('paid')
+    expect(submitScholarship).toHaveBeenCalledTimes(1)
+  })
+
+  // R-#303: una guía se paga una sola vez por **cuenta** (R-#265 §3.3). Si otra billetera
+  // de la misma cuenta ya cobró, la entrega no llega al contrato: se responde `already_paid`.
+  it('does not pay again when another wallet of the account already collected the guide', async () => {
+    const OTHER_WALLET = '0x9999999999999999999999999999999999999999'
+    const { deps, state, submitScholarship } = buildDeps({
+      db: createFakeDb({
+        recorded: [{ crypto: 'usdt', metadata: { guideId: 101 }, wallet: OTHER_WALLET }],
+      }),
+    })
+
+    const res = await checkCrosswordPost(deps, buildRequest())
+    const json = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(json.alreadyPaid).toBe(true)
+    expect(json.scholarship).toBe('already_paid')
+    expect(json.message).toMatch(/another wallet/i)
+    expect(submitScholarship).not.toHaveBeenCalled()
+    expect(state.transactions).toHaveLength(0)
   })
 
   it('answers within the deadline with the guide credited and the scholarship pending when the chain hangs', async () => {

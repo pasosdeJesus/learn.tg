@@ -36,7 +36,7 @@ import { mintCourseCredential } from '../lib/credentials.js'
 import { canMintPublicly, coursePrivacyFlags } from '../lib/course-privacy.js'
 import { answersForPlacements, guideAnswersFromDisk } from '../lib/guide-answers.js'
 import { normalizeAnswer } from '../lib/normalize-answer.js'
-import { paidToOtherWallet, recordedScholarshipTokens, recordMissingScholarshipRows } from '../lib/scholarship-records.js'
+import { cooldownLeftText, paidToOtherWallet, recordedScholarshipTokens, recordMissingScholarshipRows } from '../lib/scholarship-records.js'
 import { getActiveVault, type VaultVersion } from '../lib/deployments.js'
 
 interface WordPlacement {
@@ -518,8 +518,25 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
             chainTimeoutMs,
             'studentCanSubmit',
           )) as boolean
+          // R-#303: el enfriamiento del contrato es por **dirección**, así que otra billetera
+          // de la misma cuenta empieza limpia y puede cobrar otra guía del mismo curso a las
+          // pocas horas. Se mira la cuenta en la base (una consulta, sin RPC) antes de la
+          // cadena: la última beca pagada de este curso, por cualquier billetera de la cuenta.
+          // 24 h es el mismo plazo que `studentCanSubmit` (LearnTGVaultsV5.sol:273-276).
+          const accountCooldown = cooldownLeftText(
+            (
+              await sql<{ last: string | null }>`
+                SELECT max(date)::text AS last FROM transaction
+                WHERE usuario_id = ${billeteraUsuario.usuario_id}
+                  AND type = 'scholarship'
+                  AND metadata->>'courseId' = ${String(courseId)}
+              `.execute(db)
+            ).rows[0]?.last ?? null,
+          )
           if (usuario.profilescore == null || usuario.profilescore < 50) {
             retMessage += msg[locale].atLeast50
+          } else if (accountCooldown !== null) {
+            retMessage += '\n' + msg[locale].cannotSubmit.replace('{{0}}', accountCooldown)
           } else if (canSubmit) {
             try {
               // Read status BEFORE payment to calculate delta
