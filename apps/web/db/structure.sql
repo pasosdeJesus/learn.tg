@@ -3424,7 +3424,7 @@ CREATE TABLE public.credential_emission (
     chain_id character varying(20) DEFAULT 'celo'::character varying NOT NULL,
     is_premium boolean DEFAULT false NOT NULL,
     hash character varying(66),
-    emitted_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
+    emitted_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
     revoked_at timestamp with time zone,
     revoke_hash character varying(66),
     billetera character varying(60)
@@ -3464,7 +3464,7 @@ CREATE TABLE public.credential_metadata (
     is_premium boolean DEFAULT false,
     is_soulbound boolean DEFAULT true,
     image_url text NOT NULL,
-    updated_at timestamp without time zone DEFAULT '2026-05-21 14:39:37.360023'::timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone DEFAULT '2026-05-30 21:59:00.955389'::timestamp without time zone NOT NULL,
     course_id integer
 );
 
@@ -5509,7 +5509,7 @@ CREATE TABLE public.notifications (
     content text,
     link character varying(500),
     is_read boolean DEFAULT false NOT NULL,
-    created_at timestamp with time zone DEFAULT '2026-08-15 14:44:26.081-05'::timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT '2026-08-16 18:21:31.035-05'::timestamp with time zone NOT NULL,
     ref_key character varying(100)
 );
 
