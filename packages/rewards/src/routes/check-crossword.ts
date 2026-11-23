@@ -144,6 +144,8 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         scholarshipPaid: 'Ambas becas ya fueron pagadas para esta guía.',
         scholarshipOtherWallet:
           'La beca de esta guía ya fue pagada a otra billetera de tu cuenta. Una guía se paga una sola vez por cuenta.',
+        scholarshipOtherWalletPartial:
+          'La beca de esta guía se pagó en parte ({{0}}) desde otra billetera de tu cuenta. Para recibir el resto, envía otra vez desde esa misma billetera ({{1}}).',
         scholarshipRetry:
           'La guía quedó contada. La beca no se pudo pagar ahora y se reintentará automáticamente.',
         invalidCourse: 'ID de curso inválido',
@@ -172,6 +174,8 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
         scholarshipPaid: 'Both scholarships already paid for this guide.',
         scholarshipOtherWallet:
           'The scholarship of this guide was already paid to another wallet of your account. A guide is paid only once per account.',
+        scholarshipOtherWalletPartial:
+          'The scholarship of this guide was partially paid ({{0}}) from another wallet of your account. To receive the rest, submit again from that same wallet ({{1}}).',
         scholarshipRetry:
           'The guide was counted. The scholarship could not be paid now and will be retried automatically.',
         invalidCourse: 'Invalid course ID',
@@ -533,8 +537,33 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
               `.execute(db)
             ).rows[0]?.last ?? null,
           )
+          // Y si esa guía ya la cobró **otra billetera de la cuenta**, se dice antes que el
+          // enfriamiento: es la respuesta precisa (una guía se paga una sola vez por cuenta,
+          // R-#265 §3.3) y no cuesta nada: es la misma consulta a `transaction`.
+          const recordedOwn =
+            mistakesInCW.length == 0
+              ? await recordedScholarshipTokens(db, billeteraUsuario.usuario_id, actividadpfId)
+              : null
+          const otherWallet = recordedOwn ? paidToOtherWallet(recordedOwn.wallets, walletAddress) : null
           if (usuario.profilescore == null || usuario.profilescore < 50) {
             retMessage += msg[locale].atLeast50
+          } else if (otherWallet) {
+            // Pago **parcial**: sólo uno de los dos tokens se pagó. El resto se completa desde
+            // la misma billetera (el contrato lleva una cuenta por dirección:
+            // `guidePaidUSDT/SLEARN[course][guide][student]`), así que a la otra billetera se le
+            // dice cuál usar en vez de "ya está pagada", que sería falso.
+            const partiallyPaid = !!recordedOwn && recordedOwn.usdt !== recordedOwn.slearn
+            if (partiallyPaid) {
+              const paidToken = recordedOwn!.usdt ? 'USDT' : 'SLEARN'
+              console.log(`Skipping payScholarship: partial payment (${paidToken}) from another wallet user=${billeteraUsuario.usuario_id} guide=${actividadpfId} wallet=${otherWallet}`)
+              retMessage += '\n' + msg[locale].scholarshipOtherWalletPartial
+                .replace('{{0}}', paidToken)
+                .replace('{{1}}', otherWallet)
+              return NextResponse.json({ message: retMessage, mistakesInCW, scholarshipResult: null, alreadyPaid: false, points: 1, scholarship: 'not_paid' }, { status: 200 })
+            }
+            console.log(`Skipping payScholarship: guide already paid to another wallet of the account user=${billeteraUsuario.usuario_id} guide=${actividadpfId} wallet=${otherWallet}`)
+            retMessage += '\n' + msg[locale].scholarshipOtherWallet
+            return NextResponse.json({ message: retMessage, mistakesInCW, scholarshipResult: null, alreadyPaid: true, points: 1, scholarship: 'already_paid' }, { status: 200 })
           } else if (accountCooldown !== null) {
             retMessage += '\n' + msg[locale].cannotSubmit.replace('{{0}}', accountCooldown)
           } else if (canSubmit) {
@@ -559,16 +588,9 @@ export async function checkCrosswordPost(deps: RewardsDeps, req: NextRequest) {
               // tokens no se llama al contrato: evita la tx no-op
               // `ScholarshipAlreadyPaid` y se avisa al estudiante que ya la recibió.
               if (mistakesInCW.length == 0) {
-                const recorded = await recordedScholarshipTokens(db, billeteraUsuario.usuario_id, actividadpfId)
-                // R-#265 §3.3 (decisión del operador, 2026-10-18): una guía se paga una
-                // sola vez por **cuenta**. El contrato limita por dirección, así que sin
-                // esta comprobación otra billetera de la misma cuenta volvería a cobrarla.
-                const otherWallet = paidToOtherWallet(recorded.wallets, walletAddress)
-                if (otherWallet) {
-                  console.log(`Skipping payScholarship: guide already paid to another wallet of the account user=${billeteraUsuario.usuario_id} guide=${actividadpfId}`)
-                  retMessage += '\n' + msg[locale].scholarshipOtherWallet
-                  return NextResponse.json({ message: retMessage, mistakesInCW, scholarshipResult: null, alreadyPaid: true, points: 1, scholarship: 'already_paid' }, { status: 200 })
-                }
+                // El "ya pagada a otra billetera de la cuenta" se comprobó antes; aquí sólo
+                // queda usar lo leído para rellenar filas faltantes.
+                const recorded = recordedOwn!
                 const backfilled = await recordMissingScholarshipRows(db, {
                   usuarioId: billeteraUsuario.usuario_id,
                   wallet: walletAddress,

@@ -226,6 +226,66 @@ describe('checkCrosswordPost — scholarship section (engine)', () => {
     expect(json.message).toContain('You received 1.00 USDT')
   })
 
+  // Pago **parcial** (sólo uno de los dos tokens) desde otra billetera: no se dice "ya pagada"
+  // —sería falso—, sino desde cuál billetera hay que completar el resto.
+  it('asks to use the same wallet when only one token was paid from another wallet', async () => {
+    const OTHER_WALLET = '0x9999999999999999999999999999999999999999'
+    const { deps, submitScholarship } = buildDeps({
+      db: createFakeDb({
+        recorded: [{ crypto: 'usdt', metadata: { guideId: 101 }, wallet: OTHER_WALLET }],
+      }),
+    })
+
+    const res = await checkCrosswordPost(deps, buildRequest())
+    const json = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(json.alreadyPaid).toBe(false)
+    expect(json.scholarship).toBe('not_paid')
+    expect(json.message).toMatch(/partially paid \(USDT\)/i)
+    expect(json.message).toContain(OTHER_WALLET)
+    expect(json.message).toMatch(/same wallet/i)
+    expect(submitScholarship).not.toHaveBeenCalled()
+  })
+
+  it('completes the remaining token when the partial payment came from the same wallet', async () => {
+    const { deps, submitScholarship } = buildDeps({
+      db: createFakeDb({
+        recorded: [{ crypto: 'usdt', metadata: { guideId: 101 }, wallet: WALLET }],
+      }),
+    })
+
+    const res = await checkCrosswordPost(deps, buildRequest())
+    const json = await res.json()
+
+    expect(json.scholarship).toBe('paid')
+    expect(submitScholarship).toHaveBeenCalledTimes(1)
+  })
+
+  // El orden importa: si la guía ya la cobró otra billetera de la cuenta **y** la cuenta está
+  // en enfriamiento, la respuesta precisa es "ya fue pagada", no "espera 24 h".
+  it('answers already_paid (not the cooldown) when the guide was paid and the account is cooling down', async () => {
+    const OTHER_WALLET = '0x9999999999999999999999999999999999999999'
+    const { deps, submitScholarship } = buildDeps({
+      db: createFakeDb({
+        recorded: [
+          { crypto: 'usdt', metadata: { guideId: 101 }, wallet: OTHER_WALLET },
+          { crypto: 'slearn', metadata: { guideId: 101 }, wallet: OTHER_WALLET },
+        ],
+        lastPaidAt: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+      }),
+    })
+
+    const res = await checkCrosswordPost(deps, buildRequest())
+    const json = await res.json()
+
+    expect(json.alreadyPaid).toBe(true)
+    expect(json.scholarship).toBe('already_paid')
+    expect(json.message).toMatch(/another wallet/i)
+    expect(json.message).not.toMatch(/waiting period/i)
+    expect(submitScholarship).not.toHaveBeenCalled()
+  })
+
   // R-#303: el enfriamiento de 24 h del contrato es por **dirección**; con dos billeteras de
   // la misma cuenta se esquiva. La ruta mira la cuenta en la base antes de la cadena.
   it('refuses another guide of the same course within 24 hours of an account payment', async () => {
@@ -263,7 +323,10 @@ describe('checkCrosswordPost — scholarship section (engine)', () => {
     const OTHER_WALLET = '0x9999999999999999999999999999999999999999'
     const { deps, state, submitScholarship } = buildDeps({
       db: createFakeDb({
-        recorded: [{ crypto: 'usdt', metadata: { guideId: 101 }, wallet: OTHER_WALLET }],
+        recorded: [
+          { crypto: 'usdt', metadata: { guideId: 101 }, wallet: OTHER_WALLET },
+          { crypto: 'slearn', metadata: { guideId: 101 }, wallet: OTHER_WALLET },
+        ],
       }),
     })
 
@@ -301,6 +364,42 @@ describe('checkCrosswordPost — scholarship section (engine)', () => {
         event_data: expect.objectContaining({ courseId: 10, guideId: 101, reason: 'scholarship_timeout' }),
       }),
     )
+  })
+
+  // Bóveda **sin USDT** pero con SLEARN (como cuando un token se paga y el otro se queda
+  // pendiente hasta que llegue el dinero): la ruta registra sólo el token pagado y lo informa.
+  // La parte del contrato (que omita el token sin fondos) la cubren los tests de
+  // `apps/contracts/test/LearnTGVaultsV5.test.ts` ("Should skip USDT if vault balance
+  // insufficient"), así que aquí sólo se emula el resultado de la llamada.
+  it('records only the token the vault could pay when one of them has no funds', async () => {
+    let paid = false
+    const oneToken = {
+      read: {
+        vaults: vi.fn(async () => [10n, 0n, 1_000_000n, 1_000_000n, 10_000n, true]),
+        studentCanSubmit: vi.fn(async () => true),
+        usdtToken: vi.fn(async () => '0x4444444444444444444444444444444444444444'),
+        slearnToken: vi.fn(async () => '0x5555555555555555555555555555555555555555'),
+        // USDT en 0, SLEARN pagado (2.50)
+        getStudentGuideStatus: vi.fn(async () => (paid ? [0n, 250n] : [0n, 0n])),
+      },
+      write: { payScholarship: vi.fn() },
+    }
+    const { deps, state, submitScholarship } = buildDeps({
+      vault: oneToken,
+      submitScholarship: vi.fn(async () => {
+        paid = true
+        return TX_HASH
+      }),
+    })
+
+    const res = await checkCrosswordPost(deps, buildRequest())
+    const json = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(submitScholarship).toHaveBeenCalledTimes(1)
+    expect(json.scholarshipUsdt).toBe(0)
+    expect(json.scholarshipSlearn).toBe(2.5)
+    expect(state.transactions.map((row) => row.crypto)).toEqual(['slearn'])
   })
 
   it('reports a pending scholarship when the vault read fails', async () => {

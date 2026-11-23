@@ -583,7 +583,8 @@ node bin/warmup.mjs      # solo si el sitio se sirve con dev server; pre-compila
 - **Browser specs**: `PUERTOPRU=9001 CHAIN_ID=11142220 make test-e2e` (12s de
   aire entre specs vía `E2E_SPEC_DELAY_MS`).
 - **Esperar el despliegue** antes de correr specs: `EXPECT_CHANGE=1 TIMEOUT=1800
-  make wait-site`. Si el despliegue sólo agrega archivos a `public/` (diagramas,
+  make wait-site` (implementado con `m test:e2e:wait`, R-#305; el build se sirve en
+  `:9001` con certificado autofirmado y el target ya pasa `--insecure`). Si el despliegue sólo agrega archivos a `public/` (diagramas,
   PNG de credenciales) el marcador de build **no cambia**: usa
   `EXPECT_ASSET=/img/diagrams/<hash>.svg make wait-site` o
   `make test-e2e-spec SPEC=guide-diagrams` (detalle en `doc/e2e-testing.md` §3.5).

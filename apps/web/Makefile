@@ -18,16 +18,22 @@ build-guard: db-connections-check
 db-connections-check:
 	@sh bin/db-connections-check
 
-# Espera a que el sitio de desarrollo vuelva a responder (el operador despliega
-# en otra máquina) y mide cuánto tarda. Con EXPECT_CHANGE=1 exige build nuevo; con
-# EXPECT_ASSET (una ruta, o varias separadas por coma) exige además que esos
-# archivos de public/ ya se sirvan: el marcador de build no se mueve cuando el
-# despliegue sólo agrega estáticos (bin/wait-site, doc/e2e-testing.md §3.5).
+# Espera a que el sitio de desarrollo vuelva a responder (el operador despliega en otra
+# máquina). Usa `m test:e2e:wait` (R-#305, gitlab.com/pasosdeJesus/m/-/work_items/73): el
+# marcador de build no se mueve cuando el despliegue sólo agrega estáticos, por eso
+# EXPECT_ASSET espera a que esos archivos de public/ se sirvan de verdad (:9001 usa
+# certificado autofirmado → --insecure).
 #   make wait-site
 #   EXPECT_CHANGE=1 TIMEOUT=1200 make wait-site
 #   EXPECT_ASSET=/img/diagrams/abc.svg TIMEOUT=600 make wait-site
+#   EXPECT_BUILD=1a2b3c4d5e6f make wait-site     # huella exacta (CI)
 wait-site:
-	@node bin/wait-site $${SITE_URL:+--url $$SITE_URL} $${EXPECT_CHANGE:+--expect-build-change} $${EXPECT_ASSET:+--expect-asset $$EXPECT_ASSET} $${TIMEOUT:+--timeout $$TIMEOUT}
+	./bin/m test:e2e:wait --url $${SITE_URL:-https://learn.tg:9001} \
+	  --path $${WAIT_PATH:-/en/cluster} --insecure \
+	  $${EXPECT_CHANGE:+--expect-build-change} \
+	  $${EXPECT_BUILD:+--expect-build $$EXPECT_BUILD} \
+	  $${EXPECT_ASSET:+--expect-asset $$EXPECT_ASSET} \
+	  $${TIMEOUT:+--timeout $$TIMEOUT} $${QUIET:+--quiet}
 
 # Diagramas de las guías (doc/guide-writing.md § Diagrams, lib/remarkMermaid.mjs):
 # los bloques ```mermaid de `resources/` se renderizan a SVG en public/img/diagrams.

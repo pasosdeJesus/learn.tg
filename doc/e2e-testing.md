@@ -307,68 +307,61 @@ https://github.com/pasosdeJesus/learn.tg/issues/223
 `/api/donations/lensenia/verify`) because they compile the `gdcluster` engine's
 client chunks and route handlers.
 
-### 3.5 Waiting for a deploy: `bin/wait-site`
+### 3.5 Waiting for a deploy: `m test:e2e:wait`
 
-When the operator deploys the dev site, the site goes through 502/503 while the
-build is replaced and then comes back with a **new build id**. Running a spec too
-early measures the old code (or a half-served site) and the failure looks like a
-product bug. `bin/wait-site` is the waiting step: it probes the cluster page and
-exits when the site is usable again.
+When the operator deploys the dev site, the site goes through 502/503 while the build is
+replaced and then comes back with a **new build mark**. Running a spec too early measures the old
+code (or a half-served site) and the failure looks like a product bug. The waiting step is
+`m test:e2e:wait`, used through `make wait-site`
+(https://gitlab.com/pasosdeJesus/m/-/work_items/73, R-#305): it polls the cluster page and exits
+when the site is really serving the new build.
 
 ```sh
 cd apps/web
-bin/wait-site                       # up? (max 15 min, exits at once if already up)
-bin/wait-site --expect-build-change  # up AND serving a different build than before
-bin/wait-site --expect-asset /img/diagrams/7be1f4786140c0a2.svg   # up AND that file served
-bin/wait-site --url https://learn.tg --timeout 600 --interval 10
-EXPECT_CHANGE=1 TIMEOUT=1200 make wait-site   # same, through make
-EXPECT_ASSET=/img/diagrams/abc.svg TIMEOUT=600 make wait-site   # comma-separated list
+make wait-site                                   # up? (max 15 min, exits at once if already up)
+EXPECT_CHANGE=1 make wait-site                    # up AND a different build mark than before
+EXPECT_ASSET=/img/diagrams/<hash>.svg make wait-site   # up AND that file served (comma-separated)
+EXPECT_BUILD=1a2b3c4d5e6f make wait-site          # that exact mark (CI knows it)
+QUIET=1 EXPECT_CHANGE=1 make wait-site            # one final line only
+./bin/m test:e2e:wait --url https://learn.tg --path /en --timeout 600 --interval 10
 ```
 
 | Flag | Meaning |
 |------|---------|
-| `--url` (or `SITE_URL`) | Base URL, default `https://learn.tg:9001` |
-| `--path` | Page probed, default `/en/cluster` (exists without a session) |
-| `--timeout` | Seconds before giving up, default 900 |
+| `--url` (or `SITE_URL`) | Base URL; `make wait-site` defaults to `https://learn.tg:9001` |
+| `--path` (or `WAIT_PATH`) | Page probed, default `/en/cluster` |
+| `--timeout` (or `TIMEOUT`) | Seconds before giving up, default 900 |
 | `--interval` | Seconds between probes, default 10 |
-| `--expect-build-change` | Do not exit on the first 200: wait for a **new** build id |
-| `--expect-build <id>` | Wait for that exact build id (when the operator tells it) |
-| `--expect-asset <path>` | Wait until that URL stops answering the HTML fallback (repeatable, comma-separated) |
+| `--request-timeout` | Seconds per request, default 30 (a hung server no longer stalls the loop) |
+| `--expect-build-change` (`EXPECT_CHANGE=1`) | Do not exit on the first 200: wait for a **new** mark |
+| `--expect-build <id>` (`EXPECT_BUILD`) | Wait for that exact mark |
+| `--expect-asset <path>` (`EXPECT_ASSET`) | Wait until that URL stops answering the HTML fallback (repeatable, comma-separated) |
+| `--insecure` | Accept the self-signed certificate of `:9001` (the target always passes it; never against `:443`) |
+| `--no-cache-bust` | Do not add a unique query parameter to each probe |
+| `--quiet` (`QUIET=1`) | No intermediate output |
 
-It exits `0` when the site is up (and, with `--expect-build-change`, when the
-build changed), `1` on timeout, and prints one line per probe with the status, the
-latency and the build id, so the log shows how long the deploy took.
+It exits `0` when the expectations hold, `1` on timeout or a malformed/unknown flag, and prints
+one line per probe with the status, the latency and the mark. Three behaviours matter, all
+learned here:
 
-**How the build id is read** (`markerOf`): the route's own `/page-<hash>.js`
-chunk, then `buildId`, then any `_next/static/chunks/<name>.js`. The first
-version took the first chunk of the page, which is shared and survives most
-deploys, so `--expect-build-change` waited for nothing (2026-11-04).
+**The mark** (`markerOf`): the route's own `/page-<hash>.js` chunk first, then `buildId`, then a
+SHA-256 of the ordered `/_next/static/…` references. The first chunk of the page is shared and
+survives most deploys, so using it made `--expect-build-change` wait for nothing (2026-11-04).
 
-**First 200 after a downtime counts as the new build** (fixed 2026-11-06): if the
-site was down or answering 502 when the script started there is no previous build
-id to compare with, and the old logic waited until the timeout even though the
-deploy had finished (measured: 502 … 200 at 85 s, and the script kept polling).
+**First 200 after a downtime counts as the new build** (fixed 2026-11-06): with the site down or
+answering 502 at start there is no previous mark to compare, and the old logic ran to the timeout
+while the deploy had finished (measured: 502 … 200 at 85 s).
 
-**A server-route-only deploy may not move the marker** (measured 2026-11-08): a
-change confined to route handlers under `app/api` (for example where a file is
-read from) leaves the page chunk of `/en/cluster` untouched, so
-`--expect-build-change` runs to its timeout while the site is already serving the
-new code. When the change is server-side, skip the marker and probe that
-behaviour instead (see the next paragraph); keep `--expect-build-change` for
-changes that reach the rendered page.
-
-**A `public/`-only deploy never moves the marker** (measured 2026-11-19): adding
-files to `apps/web/public/` (the guide diagrams, the credential PNGs) leaves every
-chunk of `/en/cluster` untouched, so `--expect-build-change` polled for 11 minutes
-against a build that no longer existed. Two traps add up here: the marker does not
-move **and** the site answers `200 text/html` (its fallback) to a path that does not
-exist, so a status code proves nothing about a static file. Use
-`--expect-asset <path>` (it waits for a non-HTML content type) or, for the diagrams,
+**A `public/`-only deploy does not move the mark** (measured 2026-11-19): adding files to
+`apps/web/public/` (guide diagrams, credential PNGs) leaves every chunk of `/en/cluster`
+untouched — and the site answers `200 text/html` (its SPA fallback) to a path that does not
+exist, so a status code proves nothing about a static file. Use `--expect-asset` (it waits for a
+non-HTML content type and a non-empty body) or, for the diagrams,
 `make test-e2e-spec SPEC=guide-diagrams`, which checks all 12 in under 2 s.
 
-A deploy is not confirmed by the build id alone: check the behaviour that should
-have changed. Cheapest probe, no session needed (it must answer `400` with a
-`code`, which the old version did not do):
+A deploy is not confirmed by the mark alone: check the behaviour that should have changed.
+Cheapest probe, no session needed (it must answer `400` with a `code`, which the old version did
+not do):
 
 ```sh
 node -e "process.env.NODE_TLS_REJECT_UNAUTHORIZED='0';fetch('https://learn.tg:9001/api/crossword?lang=en&prefix=gdcluster').then(async r=>console.log(r.status, await r.text()))"
