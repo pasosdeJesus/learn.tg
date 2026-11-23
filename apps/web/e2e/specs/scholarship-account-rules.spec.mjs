@@ -256,7 +256,11 @@ async function main() {
     summary(t0)
     process.exit(1)
   }
-  rememberWallet({ privateKey: linked.wallet.privateKey, address: linked.wallet.address, role: 'member', note: 'scholarship-account-rules' })
+  // La nota importa: esta billetera pertenece a la **misma cuenta** que el dueño del curso,
+  // así que no puede ser un puesto de clúster (el fixture excluye las notas que empiezan con
+  // `scholarship-account-rules`; si no, los specs de clúster intentan invitarla y reciben
+  // 422 `not_invitable/own_church`).
+  rememberWallet({ privateKey: linked.wallet.privateKey, address: linked.wallet.address, role: 'member', note: 'scholarship-account-rules-linked' })
   ok(`segunda billetera enlazada a la misma cuenta (${linked.wallet.address.slice(0, 10)}…)`)
 
   const secondPage = await newPage(browser, linked.wallet.address, timeout)

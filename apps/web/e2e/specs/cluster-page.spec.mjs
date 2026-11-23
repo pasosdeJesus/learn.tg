@@ -178,9 +178,9 @@ async function main() {
     ok(`pastor listo: perfil #${fixture.userId}, iglesia #${fixture.churchId}${steps}`)
   } catch (error) {
     fail(`no se pudo sembrar el pastor: ${error.message}`)
-    summary()
+    const failures = summary(t0)
     await browser.close()
-    return
+    process.exit(failures > 0 ? 1 : 0)
   }
 
   // Sin el curso pagado no se puede crear el clúster; se avisa en vez de fallar con un

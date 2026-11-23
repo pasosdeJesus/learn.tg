@@ -57,9 +57,9 @@ async function main() {
     })
   } catch (error) {
     fail(`no se pudo preparar el clúster: ${error.message}`)
-    summary()
+    const failures = summary(t0)
     await browser.close()
-    return
+    process.exit(failures > 0 ? 1 : 0)
   }
 
   const { clusterId, sessions, ready, fundEmpty } = prepared

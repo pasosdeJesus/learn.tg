@@ -194,14 +194,27 @@ export async function prepareReadyCluster({
         pastorPage: session.page,
         pastor: session.pastor,
         churchName: `E2E ${session.pastor.variable} Church`,
+        ownChurch: true,
       })
     })()
     const status = await apiOn(session.page, `/api/cluster/status?walletAddress=${session.pastor.address}`)
     if (status.body?.hasCluster) {
-      await apiOn(session.page, `/api/cluster/${status.body.clusterId}/leave`, {
+      const left = await apiOn(session.page, `/api/cluster/${status.body.clusterId}/leave`, {
         method: 'POST',
         body: JSON.stringify({ walletAddress: session.pastor.address }),
       })
+      // Desde REQ/161 §4.7 salir puede estar cerrado (`409 cluster_membership_locked`): la
+      // membresía se congela al aprobar. Si no se puede salir, la verificadora disuelve el
+      // clúster abandonado; sin esto el puesto queda dentro de un clúster viejo y la
+      // invitación de las corridas siguientes responde 422 `already_in_cluster`
+      // (diagnosticado 2026-11-23: los dos puestos seguían en el clúster #230).
+      if (left.status !== 200) {
+        const disbanded = await verifierApi(`/api/admin/clusters/${status.body.clusterId}`, { method: 'DELETE' })
+        console.log(
+          `  [nota] ${session.pastor.variable}: no pudo salir del clúster #${status.body.clusterId} ` +
+            `(${left.status}); la verificadora lo disolvió (${disbanded.status})`,
+        )
+      }
     }
     // Invitar exige una iglesia **verificada**: la verificadora la confirma (igual que
     // en cluster-three-pastors; sin esto la invitación responde 422 not_invitable).

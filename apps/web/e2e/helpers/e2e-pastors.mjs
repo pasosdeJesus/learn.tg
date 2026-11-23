@@ -52,7 +52,11 @@ export async function resolveClusterPastors({ count = 3, destructive = false, ex
   // Wallets owned by the other cluster specs are usually still inside a cluster (or
   // just left one): taking them makes the join fail with 409. They are excluded here;
   // the ones this helper creates are marked 'created for a cluster'.
-  const ownedByAnotherClusterSpec = /^cluster-(page|ready|flow|three-pastors|funds-once)/
+  // `scholarship-account-rules` enlaza una segunda billetera a la **misma cuenta** del dueño
+  // del curso: no puede ser un puesto de clúster (sería la misma iglesia) y el intento fallaba
+  // con 422 `not_invitable/own_church`, tumbando todos los specs de clúster (medido 2026-11-23).
+  const ownedByAnotherClusterSpec =
+    /^(cluster-(page|ready|flow|three-pastors|funds-once)|scholarship-account-rules)/
   // El pastor con el curso GD es el recurso escaso (el iniciador): se reutiliza aunque
   // lo haya usado otro spec de clúster, porque cada corrida deja el clúster disuelto o
   // salido. Sin esto, el único pastor con curso del registro quedaba excluido por su
@@ -73,6 +77,11 @@ export async function resolveClusterPastors({ count = 3, destructive = false, ex
     .filter((row) => row.hasGdCourse === true && !row.clusterCompletedAt)
     .filter(reusable)
     .filter(free)
+    // El **más reciente** primero: una cuenta comprada para una corrida (o por
+    // `e2e-seed-course-pastors`) conserva sus guías sin beca, así que al resolver guías el
+    // 10 % entra al fondo del clúster y el flujo (cluster-flow) tiene con qué presentarse.
+    // Con cuentas viejas las becas ya están pagadas y el fondo queda vacío (medido 2026-11-23).
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
   const courseAddresses = new Set(withCourse.map((row) => String(row.address).toLowerCase()))
   const spendable = pastors.filter(
     (row) => !row.clusterCompletedAt && !courseAddresses.has(String(row.address).toLowerCase()),

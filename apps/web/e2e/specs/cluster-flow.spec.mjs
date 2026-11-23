@@ -90,10 +90,24 @@ async function main() {
     })
   } catch (error) {
     fail(`no se pudo preparar el clúster: ${error.message}`)
-    summary()
+    const failures = summary(t0)
     await browser.close()
-    return
+    process.exit(failures > 0 ? 1 : 0)
   }
+  // El flujo necesita que el clúster esté en `requested`, y la solicitud exige dinero en el
+  // fondo (REQ/161 §4.7). Con billeteras reutilizadas las becas ya estaban pagadas, así que
+  // no entró el 10 % y la solicitud se omite: sin solicitud no hay nada que devolver ni
+  // aprobar, se avisa en vez de fallar. Para ejercitarlo de verdad hace falta un pastor con
+  // guías sin beca (`bin/e2e-seed-course-pastors.mjs 1` compra el curso para uno nuevo).
+  if (prepared.fundEmpty) {
+    console.log(
+      '  [SKIP] el fondo del clúster quedó vacío (las becas de sus pastores ya estaban pagadas): ' +
+        'la solicitud a pdJ se omite y este flujo no tiene por dónde empezar',
+    )
+    await browser.close()
+    process.exit(0)
+  }
+
   const { clusterId, sessions, verifierPage } = prepared
   const initiator = sessions[0]
   const wallet = initiator.pastor.address

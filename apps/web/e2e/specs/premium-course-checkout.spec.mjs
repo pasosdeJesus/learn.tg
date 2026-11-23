@@ -311,8 +311,8 @@ async function main() {
     else fail('ya tenía el curso pero la guía no abre')
     ok('compra por la UI omitida: la billetera ya pagó el curso')
     await ownedBrowser.close()
-    summary()
-    return
+    const failures = summary(t0)
+    process.exit(failures > 0 ? 1 : 0)
   }
 
   // 4. Browser: Buy button + CheckoutModal

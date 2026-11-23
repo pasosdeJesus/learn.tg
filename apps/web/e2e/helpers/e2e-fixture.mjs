@@ -66,6 +66,11 @@ export async function ensurePastorFixture({
   pastor,
   churchName,
   countryId = 694,
+  // Los puestos de un clúster tienen que ser **iglesias distintas**: si se reutiliza la
+  // iglesia que el perfil ya tenía y otro puesto comparte esa iglesia, la invitación
+  // responde 422 `already_in_cluster` y el fixture no forma el clúster (medido 2026-11-23).
+  // Con `churchName` se crea (idempotente por nombre) una iglesia propia para el puesto.
+  ownChurch = false,
 }) {
   const log = []
   const admin = (path, init) =>
@@ -104,6 +109,19 @@ export async function ensurePastorFixture({
       body: JSON.stringify({ church_id: targetChurchId, church_relationship: 'pastor' }),
     })
     return res
+  }
+
+  if (ownChurch && churchName && profile.body?.church_name !== churchName) {
+    // Iglesia propia del puesto; si ya existe con ese nombre, se reutiliza (idempotente).
+    const created = await admin('/api/admin/churches', {
+      method: 'POST',
+      body: JSON.stringify({ name: churchName, country_id: countryId, city_name: 'Freetown' }),
+    })
+    const ownId = created.body?.church?.id
+    if (ownId) {
+      churchId = ownId
+      log.push(`iglesia propia #${ownId}`)
+    }
   }
 
   let promoted = await promote(churchId)
