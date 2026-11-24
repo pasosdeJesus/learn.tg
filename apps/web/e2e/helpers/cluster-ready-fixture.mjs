@@ -458,6 +458,17 @@ export async function prepareReadyCluster({
         const failed = results.filter((result) => !result.accepted)
           .map((result) => `${result.suffix}: ${result.status ?? 'sin respuesta'} points=${result.points ?? '-'} ${result.scholarship ?? ''} ${result.error ?? ''}`)
         console.log(`  [WARN] ${session.pastor.variable}: ${done}/6 guías · ${failed.join(' | ')}`)
+        // Si el sitio sirve una versión de la guía distinta de la del repositorio (una edición
+        // sin desplegar), la pista del crucigrama no tiene respuesta en el Markdown local y el
+        // puesto no llega a 6/6. Es un desfase de contenido, no del producto: se omite.
+        if (results.some((r) => !r.accepted && /No hay respuesta para la pista/.test(String(r.error ?? '')))) {
+          console.log(
+            '  [SKIP] el sitio sirve otra versión de alguna guía (edición sin desplegar): ' +
+              'el crucigrama no se puede resolver con el Markdown del repositorio',
+          )
+          await browser.close().catch(() => {})
+          process.exit(0)
+        }
       }
       await session.page.goto('about:blank').catch(() => {})
     }

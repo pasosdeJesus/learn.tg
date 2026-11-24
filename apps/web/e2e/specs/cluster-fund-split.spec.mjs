@@ -123,6 +123,18 @@ async function presentCluster({ browser, base, env, verifier, funder, pastors, s
     fail,
     log: (message) => console.log(`  [${side}] ${message}`),
   })
+  // Igual que `cluster-funds-once` y `cluster-flow`: presentar un clúster exige dinero en su
+  // fondo (REQ/161 §4.7). Con billeteras reutilizadas las becas ya estaban pagadas, no entra
+  // el 10 % y la solicitud se omite: sin dos clústeres presentados no hay reparto que medir.
+  if (prepared.fundEmpty) {
+    console.log(
+      '  [SKIP] el fondo del clúster quedó vacío (becas ya pagadas): no se puede presentar el ' +
+        'clúster A y este spec necesita dos presentados para probar el reparto',
+    )
+    await browser.close()
+    process.exit(0)
+  }
+
   const { clusterId, sessions, verifierPage, ready } = prepared
   const initiator = sessions[0]
   const wallet = initiator.pastor.address
