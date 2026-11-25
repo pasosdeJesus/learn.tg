@@ -11,8 +11,8 @@ packages:
 
 # Versión única por dependencia: las apps escriben `"catalog:"`.
 catalog:
-  # ecosistema y motores (release único de m@0.41.0 / REQ/75)
-  '@pasosdejesus/m': ^0.41.0
+  # ecosistema y motores (m@0.41.1 / REQ/76)
+  '@pasosdejesus/m': ^0.41.1
   '@pasosdejesus/mpdj': ^0.3.11
   '@pasosdejesus/usdt': ^0.1.7
   '@pasosdejesus/contract-test': ^0.3.12
@@ -65,7 +65,7 @@ overrides:
   '@ethereumjs/common': ^10.1.2
   '@ethereumjs/util': ^10.1.2
   '@ethereumjs/tx': ^10.1.2
-  '@pasosdejesus/m': ^0.41.0
+  '@pasosdejesus/m': ^0.41.1
 
 patchedDependencies:
   next@16.3.5: apps/web/patches/next@16.3.5-pr100607.patch
