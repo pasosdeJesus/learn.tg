@@ -245,17 +245,28 @@ again because the app now writes the handover request and reads received ones.
 
 ### WalletDialog (`components/WalletDialog.tsx`)
 
+Since F2 of https://gitlab.com/pasosdeJesus/m/-/work_items/75 the modal is the
+**shared** `WalletDialog` from `@pasosdejesus/m/wallet/next`. This repo keeps a thin
+wrapper that injects only the app decisions: the SIWE glue with invitations
+(`lib/in-app-siwe.ts`), the RPC (`lib/rpc-url.ts`), the migration guide, the **legacy**
+backup key (`learn.tg.wallet.backupConfirmed`, so already-confirmed backups stay
+confirmed) and the device cleanup (`clearRestrictedCourseCopies`, R-#256). The flow
+itself (create/import, protect step, 12 words + three-word quiz, unlock, biometrics,
+delete) lives and is tested in the package; the wrapper closes the dialog after a
+successful sign-in and after the wallet is deleted.
+
 Modal with the whole in-app flow (it does not belong in the header): create or
 import with a PIN, show the **12 words for manual backup** with a confirmation
 step, unlock an existing wallet, delete the wallet, and finish with the SIWE
 sign-in (`lib/in-app-siwe.ts`, same `signIn()` of `next-auth/react` as the external
 wallet, which refreshes the session without reloading).
 
-Every password field is a `PasswordInput` (`components/PasswordInput.tsx`), with the
-**eye** to reveal what was typed (R-#269): the password cannot be recovered (only the
-12 words can) and it is asked again on every unlock and on the enrolment, so a typo is
-expensive. The button is `type="button"` (it never submits the form) and carries
-`aria-pressed` plus the accessible name.
+Every password field is the package's `WalletPasswordInput` (formerly
+`components/PasswordInput.tsx`, now in `m`), with the **eye** to reveal what was typed
+(R-#269): the password cannot be recovered (only the 12 words can) and it is asked
+again on every unlock and on the enrolment, so a typo is expensive. The button is
+`type="button"` (it never submits the form) and carries `aria-pressed` plus the
+accessible name.
 
 Two behaviours came out of the operator's manual testing on 2026-09-15:
 

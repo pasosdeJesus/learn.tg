@@ -1,761 +1,111 @@
 // @vitest-environment jsdom
-import * as React from 'react'
-import { render, screen, act, fireEvent, waitFor } from '@testing-library/react'
+// F2 (https://gitlab.com/pasosdeJesus/m/-/work_items/75): el flujo completo vive en
+// `@pasosdejesus/m/wallet/next` y se prueba allí. Aquí se fija sólo el contrato de
+// learn.tg: qué props recibe el diálogo compartido y qué pasa al firmar o al borrar.
+import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { beforeEach, describe, it, expect, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const mocks = vi.hoisted(() => ({
-  status: 'no-wallet' as string,
-  walletInfo: null as { address: string } | null,
-  error: null as string | null,
-  create: vi.fn(),
-  importExisting: vi.fn(),
-  unlock: vi.fn(),
-  unlockWithBiometric: vi.fn(),
-  enableBiometric: vi.fn(),
-  disableBiometric: vi.fn(),
-  biometricAvailable: false,
-  biometricEnabled: false,
-  remove: vi.fn(),
-  getProvider: vi.fn(),
-  signInWithInAppWallet: vi.fn(),
-  reload: vi.fn(),
-}))
-
-const coreMocks = vi.hoisted(() => ({
-  detectPlatformSupport: vi.fn(),
-}))
-
-// R-#254: la creación sondea el dispositivo por su cuenta (el hook todavía no tiene
-// billetera que inspeccionar), así que el test controla ese sondeo.
-// R-#246 §14: detección de cancelación del gesto.
-vi.mock('@pasosdejesus/m/wallet', () => ({
-  detectPlatformSupport: coreMocks.detectPlatformSupport,
-  isUserCancelledError: (error: unknown) =>
-    /cancel|abort|notallowed/i.test(
-      error instanceof Error ? `${error.name} ${error.message}` : String(error ?? ''),
-    ),
+const captured = vi.hoisted(() => ({
+  props: null as null | Record<string, unknown>,
 }))
 
 vi.mock('@pasosdejesus/m/wallet/next', () => ({
-  // Misma regla que el paquete (R-#251): clave de 8+ caracteres.
-  isValidPassword: (value: string) => value.trim().length >= 8,
-  useInAppWallet: () => ({
-    status: mocks.status,
-    walletInfo: mocks.walletInfo,
-    error: mocks.error,
-    create: mocks.create,
-    importExisting: mocks.importExisting,
-    unlock: mocks.unlock,
-    unlockWithBiometric: mocks.unlockWithBiometric,
-    enableBiometric: mocks.enableBiometric,
-    disableBiometric: mocks.disableBiometric,
-    biometricAvailable: mocks.biometricAvailable,
-    biometricEnabled: mocks.biometricEnabled,
-    remove: mocks.remove,
-    getProvider: mocks.getProvider,
-  }),
+  WalletDialog: (props: Record<string, unknown>) => {
+    captured.props = props
+    return (
+      <div data-testid="shared-wallet-dialog">
+        <button
+          type="button"
+          data-testid="fake-sign-in"
+          onClick={() => void (props.signIn as (provider: unknown) => Promise<void>)({ request: vi.fn() })}
+        />
+        <button
+          type="button"
+          data-testid="fake-removed"
+          onClick={() => void (props.onWalletRemoved as () => Promise<void>)()}
+        />
+      </div>
+    )
+  },
 }))
 
-vi.mock('@/lib/in-app-siwe', () => ({
-  signInWithInAppWallet: mocks.signInWithInAppWallet,
-}))
+const glue = vi.hoisted(() => ({ signInWithInAppWallet: vi.fn(async () => '0xabc') }))
+vi.mock('@/lib/in-app-siwe', () => ({ signInWithInAppWallet: glue.signInWithInAppWallet }))
 
-// `signIn()` de next-auth/react refresca la sesión sin recargar; el mock queda para
-// comprobar que el diálogo **no** recarga (la clave sigue en memoria).
-Object.defineProperty(window, 'location', {
-  value: { ...window.location, reload: mocks.reload },
-  configurable: true,
-})
+vi.mock('@/lib/rpc-url', () => ({ getRpcUrl: () => 'https://rpc.test' }))
+
+const offline = vi.hoisted(() => ({ clearRestrictedCourseCopies: vi.fn(async () => []) }))
+vi.mock('@/lib/offline-course-db', () => ({
+  clearRestrictedCourseCopies: offline.clearRestrictedCourseCopies,
+}))
 
 import { WalletDialog } from '../WalletDialog'
 
 const ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
-function renderDialog(lang = 'en', sessionAddress?: string) {
-  return render(<WalletDialog lang={lang} open onOpenChange={vi.fn()} sessionAddress={sessionAddress} />)
+function renderDialog(props: Partial<Parameters<typeof WalletDialog>[0]> = {}) {
+  const onOpenChange = vi.fn()
+  render(<WalletDialog open onOpenChange={onOpenChange} {...props} />)
+  return { onOpenChange, props: captured.props as Record<string, unknown> }
 }
 
-/**
- * Lee la frase de la pantalla, confirma que se anotó y responde las tres palabras
- * que pide la verificación (R-#249). Devuelve las posiciones usadas.
- */
-function wordByPosition(): Map<number, string> {
-  const map = new Map<number, string>()
-  const list = screen.getByTestId('wallet-recovery-words')
-  list.querySelectorAll('li').forEach((li) => {
-    const spans = li.querySelectorAll('span')
-    map.set(Number((spans[0]?.textContent || '').replace(/[^0-9]/g, '')), (spans[1]?.textContent || '').trim())
-  })
-  return map
-}
+beforeEach(() => {
+  captured.props = null
+  glue.signInWithInAppWallet.mockClear()
+  offline.clearRestrictedCourseCopies.mockClear()
+  localStorage.clear()
+})
 
-async function completeBackup({ wrongInsteadOfCorrect = false } = {}) {
-  const words = wordByPosition()
-  await act(async () => {
-    fireEvent.click(screen.getByTestId('wallet-words-done'))
-  })
-  // Sólo las posiciones que el diálogo pide (tres), no las doce de la lista.
-  const asked = [...document.querySelectorAll('[data-testid^="wallet-verify-"]')]
-    .map((el) => Number((el.getAttribute('data-testid') || '').replace('wallet-verify-', '')))
-    .filter((position) => Number.isFinite(position))
-    .sort((a, b) => a - b)
+afterEach(() => {
+  localStorage.clear()
+})
 
-  asked.forEach((position, index) => {
-    const input = screen.queryByTestId(`wallet-verify-${position}`)
-    if (!input) return
-    const value = wrongInsteadOfCorrect && index === 0 ? 'nottheword' : words.get(position) || ''
-    fireEvent.change(input, { target: { value } })
-  })
-  await act(async () => {
-    fireEvent.click(screen.getByTestId('wallet-verify'))
-  })
-  return asked
-}
+describe('WalletDialog (envoltorio de learn.tg)', () => {
+  it('pasa al diálogo compartido el RPC, la clave heredada, el nombre y la sesión', () => {
+    const { props } = renderDialog({ sessionAddress: ADDRESS })
 
-async function fillPassword(password = '12345678') {
-  fireEvent.change(screen.getByTestId('wallet-password'), { target: { value: password } })
-  if (screen.queryByTestId('wallet-password-confirm')) {
-    fireEvent.change(screen.getByTestId('wallet-password-confirm'), { target: { value: password } })
-  }
-}
-
-describe('WalletDialog (R-#244)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    localStorage.clear()
-    mocks.status = 'no-wallet'
-    mocks.walletInfo = null
-    mocks.error = null
-    mocks.biometricAvailable = false
-    mocks.biometricEnabled = false
-    coreMocks.detectPlatformSupport.mockResolvedValue({ webauthn: false, userVerifying: false, prf: null })
+    expect(screen.getByTestId('shared-wallet-dialog')).toBeTruthy()
+    expect(props.appName).toBe('learn.tg')
+    expect(props.rpcUrl).toBe('https://rpc.test')
+    expect(props.sessionAddress).toBe(ADDRESS)
+    expect(props.backup).toEqual({ storageKey: 'learn.tg.wallet.backupConfirmed' })
+    expect(props.migrationHref).toBe('/en/migration-in-app-wallet')
+    expect(props.lang).toBe('en')
+    expect(props.logger).toBeTruthy()
   })
 
-  it('creates the wallet and shows the 12 words with a confirmation', async () => {
-    mocks.create.mockResolvedValue({
-      walletInfo: { address: ADDRESS },
-      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
-    })
-    renderDialog()
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-
-    expect(mocks.create).toHaveBeenCalledWith('12345678')
-    const words = screen.getByTestId('wallet-recovery-words')
-    expect(words.querySelectorAll('li')).toHaveLength(12)
-    // R-#251 (decisión del operador, 2026-09-21): el respaldo pide escribirlas en
-    // papel y avisa de que quien tenga las 12 palabras tiene los fondos.
-    expect(screen.getByText(/on paper/i)).toBeInTheDocument()
-    expect(screen.getByText(/owns the funds/i)).toBeInTheDocument()
-    // Todavía no firma: primero se respaldan las palabras y se verifica (R-#249)
-    expect(mocks.signInWithInAppWallet).not.toHaveBeenCalled()
-    expect(screen.getByTestId('wallet-words-done')).toBeInTheDocument()
-    expect(screen.queryByTestId('wallet-verify')).not.toBeInTheDocument()
+  it('en español usa la guía de migración en español', () => {
+    const { props } = renderDialog({ lang: 'es' })
+    expect(props.lang).toBe('es')
+    expect(props.migrationHref).toBe('/es/migracion-billetera-app')
   })
 
-  it('does not create the wallet when the PINs differ', async () => {
-    renderDialog()
-    fireEvent.change(screen.getByTestId('wallet-password'), { target: { value: '12345678' } })
-    fireEvent.change(screen.getByTestId('wallet-password-confirm'), { target: { value: '87654321' } })
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-    expect(mocks.create).not.toHaveBeenCalled()
-    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/do not match/i)
+  it('al firmar usa el glue de learn.tg (invitaciones) y cierra el diálogo', async () => {
+    const { onOpenChange, props } = renderDialog()
+
+    fireEvent.click(screen.getByTestId('fake-sign-in'))
+    await vi.waitFor(() => expect(glue.signInWithInAppWallet).toHaveBeenCalledTimes(1))
+
+    expect(glue.signInWithInAppWallet).toHaveBeenCalledWith(expect.anything(), { lang: 'en' })
+    await vi.waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
+    expect(props.signIn).toBeTypeOf('function')
   })
 
-  it('rejects a password shorter than eight characters', async () => {
-    renderDialog()
-    await fillPassword('123')
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-    expect(mocks.create).not.toHaveBeenCalled()
-    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/8 characters/i)
+  it('al borrar la billetera limpia la sesión fría, las copias del dispositivo y cierra', async () => {
+    localStorage.setItem('learn.tg.sessionAddress', ADDRESS)
+    const { onOpenChange } = renderDialog()
+
+    fireEvent.click(screen.getByTestId('fake-removed'))
+    await vi.waitFor(() => expect(offline.clearRestrictedCourseCopies).toHaveBeenCalledTimes(1))
+    await vi.waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
+
+    expect(localStorage.getItem('learn.tg.sessionAddress')).toBeNull()
   })
 
-  it('asks for three words and signs in only when they match', async () => {
-    mocks.create.mockResolvedValue({
-      walletInfo: { address: ADDRESS },
-      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
-    })
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-
-    const positions = await completeBackup()
-    expect(positions).toHaveLength(3)
-    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
-    // `signIn()` de next-auth/react refresca la sesión: ya no se recarga la página.
-    expect(mocks.reload).not.toHaveBeenCalled()
-    expect(localStorage.getItem('learn.tg.wallet.backupConfirmed')).toBe('1')
-  })
-
-  // R-#254: en un dispositivo que puede verificar al usuario, la creación ofrece
-  // la huella y la engancha al confirmar el respaldo, con la clave todavía en
-  // memoria (no se vuelve a pedir).
-  it('enrolls the fingerprint during creation when the device supports it', async () => {
-    mocks.biometricAvailable = true
-    mocks.create.mockResolvedValue({
-      walletInfo: { address: ADDRESS },
-      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
-    })
-    mocks.enableBiometric.mockResolvedValue(undefined)
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-
-    // R-#269/2026-09-28: tras la clave el diálogo pregunta cómo desbloquear, con el
-    // gesto ya elegido (método por omisión cuando el dispositivo puede verificar).
-    await waitFor(() => expect(screen.getByTestId('wallet-protect')).toBeInTheDocument())
-    expect(screen.getByTestId('wallet-protect-gesture')).toBeChecked()
-    // El paso de protección todavía no ha mostrado las palabras: su botón de
-    // respaldo no debe aparecer aquí (reportado el 2026-10-23).
-    expect(screen.queryByTestId('wallet-words-done')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('wallet-words-done-footer')).not.toBeInTheDocument()
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-protect-continue'))
-    })
-    expect(mocks.enableBiometric).toHaveBeenCalledWith('12345678')
-
-    // Una sola acción para continuar tras escribir las palabras (sin duplicado en
-    // el pie del diálogo).
-    await waitFor(() => expect(screen.getByTestId('wallet-words-done')).toBeInTheDocument())
-    expect(screen.queryByTestId('wallet-words-done-footer')).not.toBeInTheDocument()
-
-    await completeBackup()
-
-    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
-  })
-
-  // R-#254: la creación ofrece la huella por el sondeo del propio diálogo, sin
-  // depender de que el hook ya conozca el soporte (antes de crear no hay billetera).
-  it('offers the fingerprint during creation from its own device probe', async () => {
-    coreMocks.detectPlatformSupport.mockResolvedValue({ webauthn: true, userVerifying: true, prf: true })
-    mocks.create.mockResolvedValue({
-      walletInfo: { address: ADDRESS },
-      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
-    })
-    mocks.enableBiometric.mockResolvedValue(undefined)
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-    // El sondeo del dispositivo se resuelve en un efecto: hay que dejarlo asentar antes
-    // de crear, que es cuando el diálogo decide si ofrece el paso de protección.
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)) })
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-    await waitFor(() => expect(screen.getByTestId('wallet-protect')).toBeInTheDocument())
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-protect-continue'))
-    })
-    await completeBackup()
-
-    expect(mocks.enableBiometric).toHaveBeenCalledWith('12345678')
-  })
-
-  it('tells the user when the fingerprint could not be saved during creation', async () => {
-    coreMocks.detectPlatformSupport.mockResolvedValue({ webauthn: true, userVerifying: true, prf: true })
-    mocks.create.mockResolvedValue({
-      walletInfo: { address: ADDRESS },
-      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
-    })
-    mocks.enableBiometric.mockRejectedValue(new Error('NotAllowedError'))
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)) })
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-    await waitFor(() => expect(screen.getByTestId('wallet-protect')).toBeInTheDocument())
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-protect-continue'))
-    })
-
-    // El paso sigue abierto: la clave queda de respaldo y se puede seguir sólo con ella.
-    await waitFor(() => expect(screen.getByTestId('wallet-protect-notice')).toBeInTheDocument())
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-protect-password'))
-    })
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-protect-continue'))
-    })
-    await waitFor(() => expect(screen.getByTestId('wallet-words-done')).toBeInTheDocument())
-  })
-
-  // "Sólo la clave" es una elección explícita: no se registra passkey.
-  it('continues with the password only when that is chosen', async () => {
-    mocks.biometricAvailable = true
-    mocks.create.mockResolvedValue({
-      walletInfo: { address: ADDRESS },
-      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
-    })
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-    await waitFor(() => expect(screen.getByTestId('wallet-protect')).toBeInTheDocument())
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-protect-password'))
-    })
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-protect-continue'))
-    })
-    await completeBackup()
-
-    expect(mocks.enableBiometric).not.toHaveBeenCalled()
-    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
-  })
-
-  // Reporte del operador (2026-09-28): la clave se podía teclear pero no ver.
-  it('shows and hides the password', async () => {
-    renderDialog()
-    await waitFor(() => expect(screen.getByTestId('wallet-password')).toBeInTheDocument())
-
-    const input = screen.getByTestId('wallet-password')
-    expect(input).toHaveAttribute('type', 'password')
-
-    fireEvent.click(screen.getAllByTestId('password-visibility')[0])
-    expect(input).toHaveAttribute('type', 'text')
-
-    fireEvent.click(screen.getAllByTestId('password-visibility')[0])
-    expect(input).toHaveAttribute('type', 'password')
-  })
-
-  it('keeps the password-only path when the device cannot verify the user', async () => {
-    mocks.biometricAvailable = false
-    mocks.create.mockResolvedValue({
-      walletInfo: { address: ADDRESS },
-      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
-    })
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-
-    // Sin capacidad de verificar al usuario no hay paso de protección.
-    expect(screen.queryByTestId('wallet-protect')).not.toBeInTheDocument()
-
-    await completeBackup()
-    expect(mocks.enableBiometric).not.toHaveBeenCalled()
-    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
-  })
-
-  it('still signs in when the fingerprint gesture is cancelled during creation', async () => {
-    mocks.biometricAvailable = true
-    mocks.create.mockResolvedValue({
-      walletInfo: { address: ADDRESS },
-      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
-    })
-    mocks.enableBiometric.mockRejectedValue(new Error('NotAllowedError'))
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-    await waitFor(() => expect(screen.getByTestId('wallet-protect')).toBeInTheDocument())
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-protect-continue'))
-    })
-    await waitFor(() => expect(screen.getByTestId('wallet-protect-notice')).toBeInTheDocument())
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-protect-password'))
-    })
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-protect-continue'))
-    })
-    await completeBackup()
-
-    expect(mocks.enableBiometric).toHaveBeenCalled()
-    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
-  })
-
-  // Importar sigue disponible, pero no se anuncia: no es la ruta predeterminada
-  // (reporte del operador, 2026-10-23). La opción vive en el selector de modo.
-  it('does not promote importing while creating; the mode stays available', () => {
-    renderDialog()
-
-    expect(screen.queryByTestId('wallet-import-offer')).toBeNull()
-    expect(screen.queryByTestId('wallet-switch-import')).toBeNull()
-
-    fireEvent.click(screen.getByTestId('wallet-mode-import'))
-
-    expect(screen.getByTestId('wallet-mnemonic')).toBeInTheDocument()
-    expect(screen.getByTestId('wallet-import-security')).toHaveTextContent(/never leaves this device/i)
-    expect(screen.getByTestId('wallet-migration-guide')).toHaveAttribute('href', '/en/migration-in-app-wallet')
-  })
-
-  it('links the Spanish migration guide in Spanish', () => {
-    renderDialog('es')
-    fireEvent.click(screen.getByTestId('wallet-mode-import'))
-    expect(screen.getByTestId('wallet-migration-guide')).toHaveAttribute('href', '/es/migracion-billetera-app')
-  })
-
-  it('asks how to unlock after importing', async () => {
-    mocks.biometricAvailable = true
-    mocks.importExisting.mockResolvedValue({ address: ADDRESS })
-    mocks.enableBiometric.mockResolvedValue(undefined)
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    fireEvent.click(screen.getByTestId('wallet-mode-import'))
-    fireEvent.change(screen.getByTestId('wallet-mnemonic'), {
-      target: { value: 'one two three four five six seven eight nine ten eleven twelve' },
-    })
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-import'))
-    })
-
-    await waitFor(() => expect(screen.getByTestId('wallet-protect')).toBeInTheDocument())
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-protect-continue'))
-    })
-
-    // El gesto se sella con la clave ya tecleada y después se firma.
-    expect(mocks.enableBiometric).toHaveBeenCalledWith('12345678')
-    await waitFor(() => expect(mocks.signInWithInAppWallet).toHaveBeenCalled())
-    expect(screen.queryByTestId('wallet-protect')).not.toBeInTheDocument()
-  })
-
-  // R-#270 §3.2: la importación acepta la llave privada además de la frase.
-  it('imports with a private key when only that is given', async () => {
-    const KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d'
-    mocks.importExisting.mockResolvedValue({ address: ADDRESS })
-    renderDialog()
-
-    fireEvent.click(screen.getByTestId('wallet-mode-import'))
-    expect(screen.getByTestId('wallet-private-key')).toBeInTheDocument()
-    fireEvent.change(screen.getByTestId('wallet-private-key'), { target: { value: KEY } })
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-import'))
-    })
-
-    await waitFor(() =>
-      expect(mocks.importExisting).toHaveBeenCalledWith({ password: '12345678', privateKey: KEY }),
-    )
-  })
-
-  it('rejects filling both the recovery phrase and the private key', async () => {
-    renderDialog()
-
-    fireEvent.click(screen.getByTestId('wallet-mode-import'))
-    fireEvent.change(screen.getByTestId('wallet-mnemonic'), { target: { value: 'one two three' } })
-    fireEvent.change(screen.getByTestId('wallet-private-key'), { target: { value: '0xabc' } })
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-import'))
-    })
-
-    expect(mocks.importExisting).not.toHaveBeenCalled()
-    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/either the recovery phrase or the private key/i)
-  })
-
-  it('keeps the import button disabled until one secret is typed', () => {
-    renderDialog()
-
-    fireEvent.click(screen.getByTestId('wallet-mode-import'))
-    expect(screen.getByTestId('wallet-import')).toBeDisabled()
-  })
-
-  // El respaldo no se da por hecho: con una palabra equivocada no se firma y se
-  // puede volver a ver la frase.
-  it('does not sign in when a backup word is wrong', async () => {
-    mocks.create.mockResolvedValue({
-      walletInfo: { address: ADDRESS },
-      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
-    })
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-
-    await completeBackup({ wrongInsteadOfCorrect: true })
-
-    expect(mocks.signInWithInAppWallet).not.toHaveBeenCalled()
-    expect(screen.getByTestId('wallet-verify-error')).toHaveTextContent(/do not match/i)
-    expect(localStorage.getItem('learn.tg.wallet.backupConfirmed')).not.toBe('1')
-
-    // Y puede volver a ver la frase si no la recuerda.
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-words-peek'))
-    })
-    expect(screen.getByTestId('wallet-recovery-words')).toBeInTheDocument()
-  })
-
-  it('unlocks an existing wallet and then signs in', async () => {
-    mocks.status = 'locked'
-    mocks.walletInfo = { address: ADDRESS }
-    mocks.unlock.mockResolvedValue({ address: ADDRESS })
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-unlock'))
-    })
-
-    expect(mocks.unlock).toHaveBeenCalledWith('12345678')
-    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
-  })
-
-  // R-#246 (L2): con la passkey registrada el gesto es el camino principal: al
-  // abrir el diálogo bloqueado se pide directamente, sin campo de password.
-  it('asks for the gesture as soon as the locked dialog opens', async () => {
-    mocks.status = 'locked'
-    mocks.walletInfo = { address: ADDRESS }
-    mocks.biometricEnabled = true
-    mocks.unlockWithBiometric.mockResolvedValue({ address: ADDRESS })
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    expect(screen.queryByTestId('wallet-password')).not.toBeInTheDocument()
-
-    await waitFor(() => expect(mocks.unlockWithBiometric).toHaveBeenCalled())
-    expect(mocks.unlock).not.toHaveBeenCalled()
-    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
-  })
-
-  // Decisión del operador (2026-09-25): una cancelación no deja la clave como camino
-  // principal; en la siguiente apertura se vuelve a pedir el gesto de inmediato.
-  it('asks for the gesture again on the next open after a cancelled one', async () => {
-    mocks.status = 'locked'
-    mocks.walletInfo = { address: ADDRESS }
-    mocks.biometricEnabled = true
-    mocks.unlockWithBiometric.mockRejectedValue(new Error('NotAllowedError'))
-    const first = renderDialog()
-
-    await waitFor(() => {
-      expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/cancelled/i)
-    })
-    expect(screen.getByTestId('wallet-password')).toBeInTheDocument()
-    first.unmount()
-
-    mocks.unlockWithBiometric.mockReset()
-    mocks.unlockWithBiometric.mockResolvedValue({ address: ADDRESS })
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    await waitFor(() => expect(mocks.unlockWithBiometric).toHaveBeenCalledTimes(1))
-    expect(screen.queryByTestId('wallet-password')).not.toBeInTheDocument()
-  })
-
-  // R-#246: el gesto no es el único camino. Si se cancela, el password queda a un
-  // toque de distancia y no se pierde la billetera.
-  it('falls back to the password when the gesture is cancelled', async () => {
-    mocks.status = 'locked'
-    mocks.walletInfo = { address: ADDRESS }
-    mocks.biometricEnabled = true
-    mocks.unlockWithBiometric.mockRejectedValue(new Error('NotAllowedError'))
-    mocks.unlock.mockResolvedValue({ address: ADDRESS })
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    await waitFor(() => {
-      expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/cancelled/i)
-    })
-    expect(screen.getByTestId('wallet-password')).toBeInTheDocument()
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-unlock'))
-    })
-
-    expect(mocks.unlock).toHaveBeenCalledWith('12345678')
-    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
-  })
-
-  it('offers to enable the fingerprint with the same password', async () => {
-    mocks.status = 'locked'
-    mocks.walletInfo = { address: ADDRESS }
-    mocks.biometricAvailable = true
-    mocks.enableBiometric.mockResolvedValue({ address: ADDRESS })
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog()
-
-    // Deshabilitado hasta que haya password
-    expect(screen.getByTestId('wallet-enable-biometric')).toBeDisabled()
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-enable-biometric'))
-    })
-
-    expect(mocks.enableBiometric).toHaveBeenCalledWith('12345678')
-    expect(mocks.signInWithInAppWallet).toHaveBeenCalled()
-  })
-
-  it('does not offer the fingerprint when the device cannot verify the user', () => {
-    mocks.status = 'locked'
-    mocks.walletInfo = { address: ADDRESS }
-    mocks.biometricAvailable = false
-    renderDialog()
-
-    expect(screen.queryByTestId('wallet-enable-biometric')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('wallet-unlock-biometric')).not.toBeInTheDocument()
-    expect(screen.getByTestId('wallet-unlock')).toBeInTheDocument()
-  })
-
-  it('lets the user turn the fingerprint unlock off', async () => {
-    mocks.status = 'unlocked'
-    mocks.walletInfo = { address: ADDRESS }
-    mocks.biometricEnabled = true
-    mocks.disableBiometric.mockResolvedValue(undefined)
-    renderDialog()
-
-    expect(screen.getByTestId('wallet-biometric-status')).toHaveTextContent(/fingerprint unlock is on/i)
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-disable-biometric'))
-    })
-    expect(mocks.disableBiometric).toHaveBeenCalled()
-  })
-
-  it('reports a cancelled gesture without losing the wallet', async () => {
-    mocks.status = 'locked'
-    mocks.walletInfo = { address: ADDRESS }
-    mocks.biometricEnabled = true
-    mocks.unlockWithBiometric.mockRejectedValue(new Error('NotAllowedError'))
-    renderDialog()
-
-    await waitFor(() => {
-      expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/cancelled/i)
-    })
-    expect(screen.getByTestId('wallet-unlock-biometric')).toBeInTheDocument()
-  })
-
-  // R-#244: si la cookie de sesión ya es de esta billetera, volver a firmar el
-  // SIWE recarga la página, la clave sale de memoria y la billetera queda
-  // bloqueada otra vez: el usuario no llegaba a donar ni a comprar
-  // (reportado el 2026-09-16).
-  it('does not sign in again when the session already is this wallet', async () => {
-    mocks.status = 'locked'
-    mocks.walletInfo = { address: ADDRESS }
-    mocks.unlock.mockResolvedValue({ address: ADDRESS })
-    mocks.getProvider.mockReturnValue({ request: vi.fn() })
-    mocks.signInWithInAppWallet.mockResolvedValue(ADDRESS)
-    renderDialog('en', ADDRESS.toLowerCase())
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-unlock'))
-    })
-
-    expect(mocks.unlock).toHaveBeenCalledWith('12345678')
-    expect(mocks.signInWithInAppWallet).not.toHaveBeenCalled()
-    expect(mocks.reload).not.toHaveBeenCalled()
-  })
-
-  it('shows the error reported by the hook', () => {
-    mocks.error = 'Wrong password or corrupted wallet data'
-    renderDialog()
-    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/Wrong password/)
-  })
-
-  // R-#251: la frase de recuperación se valida (BIP39) antes de derivar; el código
-  // `invalid-mnemonic` no es texto para el usuario.
-  it('translates an invalid recovery phrase when importing', async () => {
-    mocks.status = 'no-wallet'
-    mocks.importExisting.mockRejectedValue(new Error('invalid-mnemonic'))
-    renderDialog()
-
-    fireEvent.click(screen.getByTestId('wallet-mode-import'))
-    fireEvent.change(screen.getByTestId('wallet-mnemonic'), {
-      target: { value: 'test test test test test test test test test test test tset' },
-    })
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-import'))
-    })
-
-    expect(screen.getByTestId('wallet-dialog-error')).toHaveTextContent(/not valid/i)
-    expect(mocks.importExisting).toHaveBeenCalled()
-  })
-
-  // Bug E (2026-09-19): con la billetera desbloqueada el diálogo mostraba el
-  // formulario de crear/importar; el operador esperaba ver SU billetera.
-  it('shows the wallet, not the create form, when it is unlocked', () => {
-    mocks.status = 'unlocked'
-    mocks.walletInfo = { address: ADDRESS }
-    mocks.biometricEnabled = true
-    renderDialog()
-
-    expect(screen.getByTestId('wallet-address')).toBeInTheDocument()
-    expect(screen.getByTestId('wallet-biometric-status')).toBeInTheDocument()
-    expect(screen.queryByTestId('wallet-create')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('wallet-password-confirm')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('wallet-mode-create')).not.toBeInTheDocument()
-  })
-
-  it('is bilingual', () => {
-    renderDialog('es')
-    expect(screen.getByRole('dialog').textContent).toContain('Crear una billetera')
-    expect(screen.getByTestId('wallet-create')).toHaveTextContent('Crear billetera')
-  })
-
-  // R-#238: el modal reabría en la pantalla de la frase de recuperación (el
-  // operador lo reportó el 2026-09-15) y parecía imposible desbloquear la
-  // billetera recién creada. Al cerrar, el flujo vuelve a empezar.
-  it('starts a fresh flow when it is closed and reopened', async () => {
-    mocks.create.mockResolvedValue({
-      walletInfo: { address: ADDRESS },
-      mnemonic: 'one two three four five six seven eight nine ten eleven twelve',
-    })
-    const onOpenChange = vi.fn()
-    const { rerender } = render(<WalletDialog lang="en" open onOpenChange={onOpenChange} />)
-
-    await fillPassword()
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('wallet-create'))
-    })
-    expect(screen.getByTestId('wallet-recovery-words')).toBeInTheDocument()
-
-    rerender(<WalletDialog lang="en" open={false} onOpenChange={onOpenChange} />)
-    rerender(<WalletDialog lang="en" open onOpenChange={onOpenChange} />)
-
-    expect(screen.queryByTestId('wallet-recovery-words')).not.toBeInTheDocument()
-    expect(screen.getByTestId('wallet-password')).toBeInTheDocument()
+  it('el cierre desde el diálogo se propaga al host', () => {
+    const { onOpenChange, props } = renderDialog()
+    ;(props.onOpenChange as (open: boolean) => void)(false)
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 })

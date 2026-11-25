@@ -108,8 +108,11 @@ vi.mock('@pasosdejesus/m/shadcn-components/ui/dialog', () => {
     open ? React.createElement(React.Fragment, null, children) : null
   return {
     Dialog,
-    DialogContent: ({ children, className }: any) =>
-      React.createElement('div', { role: 'dialog' }, children),
+    // Reenvía el resto de props (p. ej. `data-testid`, `aria-*`): el `WalletDialog`
+    // graduado de `m` (REQ/75) expone `wallet-dialog` sobre el contenido y sin esto
+    // las pruebas de learn.tg verían un stub sin identificadores.
+    DialogContent: ({ children, className, hideClose, ...rest }: any) =>
+      React.createElement('div', { role: 'dialog', ...rest }, children),
     DialogDescription: ({ children }: any) =>
       React.createElement(React.Fragment, null, children),
     DialogFooter: ({ children, className }: any) =>

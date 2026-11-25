@@ -200,10 +200,10 @@ beforeAll(() => {
 
 ### Coverage Status (Current)
 
-**Suite size (measured 2026-10-28, after the admin queue and the wallet guard):**
-`make test` = **1526 passed / 6 skipped, 0 failed** in 203 files: `test-lib` 461,
-`test-hooks` 93, `test-api` 353, `test-components` 319, `test-pages` 79, `test-db` 5,
-`test-rewards` 97, `test-gdcluster` 119.
+**Suite size (measured 2026-11-24, after the shared `WalletDialog` of `m@0.41.0`):**
+`make test` = **1683 passed / 6 skipped, 0 failed** in 224 files: `test-lib` 499,
+`test-hooks` 93, `test-api` 364, `test-components` 295, `test-pages` 81, `test-db` 5,
+`test-rewards` 113, `test-gdcluster` 233.
 
 | Layer | Statements | Notes |
 |-------|-----------|-------|

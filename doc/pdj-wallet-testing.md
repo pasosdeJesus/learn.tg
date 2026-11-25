@@ -180,7 +180,8 @@ nunca se podía completar.
 billetera no se creaba ni se desbloqueaba. Corregido en **`m@0.37.20`**: el campo `browser`
 de `@pasosdejesus/m` mapea `dist/wallet/signer-runtime.js` a la variante con `import`
 estático de `viem`. Con versiones anteriores los specs de esta página quedan en rojo; el
-catálogo de learn.tg fija `^0.37.20`.
+catálogo de learn.tg fija hoy `^0.41.0` (el release de REQ/75, que ya incluye el diálogo
+compartido; el mínimo histórico para este defecto sigue siendo `0.37.20`).
 
 **Receta local (esta VM sí puede servir):** `bin/dev` levanta
 `http://localhost:4000` y los specs aceptan `SITE_URL`, así que se pueden correr

@@ -24,8 +24,8 @@ interface WalletSelectorProps {
  *
  * Sin sesión muestra **un solo** botón "Conectar": `WalletConnect` del motor `wallet`
  * (`generated-wallet/next`) abre el modal de elección (in-app o externa), con el cuerpo
- * sobrecargado para learn.tg (`WalletDialog` para crear/importar/desbloquear/ingresar y
- * `ConnectWalletButton` para la red + SIWE externas). Con sesión muestra la dirección
+ * sobrecargado para learn.tg (`WalletDialog`, el diálogo compartido de `m` con el glue
+ * local, y `ConnectWalletButton` para la red + SIWE externas). Con sesión muestra la dirección
  * corta, "Desconectar" y la píldora que abre el panel o el diálogo; vincular e invitar
  * viven en la pestaña "Cuentas" del panel y en el perfil. En el navegador de una
  * billetera la externa va primero dentro del modal (`?iappwallet=1` invierte la prioridad).
@@ -192,8 +192,9 @@ export function WalletSelector({ lang = 'en' }: WalletSelectorProps) {
   // R-#265 §3.9 y preferencia del operador (2026-10-17): **un solo** botón "Conectar"
   // en la cabecera y **un modal** de elección (in-app o externa) del motor `wallet`
   // (`generated-wallet/next`), en vez de varios botones. El cuerpo se sobrecarga
-  // (`renderBody`) para conservar el flujo de learn.tg: `WalletDialog` (creación,
-  // importación, 12 palabras, ingreso) y `ConnectWalletButton` (red + SIWE externos).
+  // (`renderBody`) para conservar el flujo de learn.tg: `WalletDialog` (el diálogo
+  // compartido de `m`, https://gitlab.com/pasosdeJesus/m/-/work_items/75) y
+  // `ConnectWalletButton` (red + SIWE externos).
   // En el navegador propio de una billetera la externa va primero; en el resto, la
   // in-app (R-#270 §3.1). La cabecera con sesión (panel, desvincular, invitar) sigue
   // aparte porque es específica de la app.

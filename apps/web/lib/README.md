@@ -51,7 +51,6 @@ On-chain business logic lives in the engines (`packages/rewards`, `packages/gdcl
 | `verifier-alerts.ts` | In-app alerts to verifiers (R-#223) |
 | `migration-guide.ts` | Serves `doc/migration-in-app-wallet/{en,es}.md` at `/en/migration-in-app-wallet` and `/es/migracion-billetera-app` (R-#270) |
 | `wallet-amounts.ts` | Panel format/parse/send-validation helpers |
-| `wallet-backup.ts` | Three-word backup confirmation |
 | `wallet-browser.ts` | Wallet-browser (MiniPay/OKX/…) detection |
 | `external-provider.ts` | EIP-6963 external wallet provider resolution |
 | `in-app-siwe.ts` | SIWE for the in-app wallet |
