@@ -590,7 +590,7 @@ and §2.4.
 | `wallet-link-second-wallet.spec.mjs` | R-#265 §3.2: linking a **second** wallet to the account (the extension existed but the site had no `eth_accounts` permission yet) |
 | `wallet-invitation-two-devices.spec.mjs` | R-#265 §3.2: account A invites an **address**; that wallet opens the site in another browser context, signs and accepts on entry (a normal sign-in is rejected on purpose) |
 | `wallet-handover.spec.mjs` | R-#288: the in-app wallet is added to an existing **verified** account and the duplicate account (created by the in-app wallet) is deleted. Two isolated browser contexts |
-| `header-wallet-dialog.spec.mjs` | R-#245: real header + modal — create → close → reopen starts fresh → unlock from the header → SIWE → session survives a reload → `✕` returns to signed-out |
+| `header-wallet-dialog.spec.mjs` | R-#245 + REQ/75 F2: real header + modal — create → **the modal cannot be closed while the phrase is on screen (no X, Esc ignored)** → three-word backup → sign-in closes the modal → reopening with a session shows the **panel**, not the phrase or the create form → a reload keeps the session → `✕` returns to signed-out → "Sign in again" when the wallet is remembered |
 | `header-navigation.spec.mjs` | R-#161 §15: the two-level ☰ menu — as a **guest** only `Courses` and `learn.tg` exist (no `My account`, no `GDCluster`) and each group opens with its links; **with a session** `My account` appears with Profile/Privacy/Referrals, and `GDCluster / Redgd` only when the profile is the one the server offers the course to (R-#194), with Ranking public, Budget with the purchase and Cluster with the pastor role. A section that does not apply is not rendered and no reason is shown |
 | `donate-unlock-dialog.spec.mjs` | R-#244: in-app session with the wallet locked — the donation modal's unlock button opens the wallet dialog **on top** with the PIN form, and unlocking removes the notice |
 | `biometric-unlock.spec.mjs` | R-#246: real header + dialog with a **CDP virtual authenticator (`hasPrf`)** — create → enable fingerprint → reload → one gesture unlocks → the donation modal stops asking to unlock |
@@ -630,6 +630,29 @@ time out on SIWE under suite load (passes alone).
 | `pastor-journey`, `referral-premium` | Dev churches/referral fund (`0x01a728…`, published by `/api/churches/fund`) with **≥22 SLEARN** for the pastor bonus, otherwise the on-chain `transfer` reverts. Top it up from the test wallet (e.g. 300 SLEARN) when the balance is low |
 | `cluster-ready`, `cluster-flow`, `cluster-funds-once` | The course vault must have funds (the fixture donates with `ensureCourseVault`) and the cluster's wallet must exist **before** the guides, or the 10% never reaches the cluster fund and `sent` cannot verify the cluster. A pastor with the GD course is bought automatically when the registry has none (§2.2), so the only external need is funds in the fixture wallet |
 | `crossword-submit-ends` | A guide whose two scholarships are **not** paid for the wallet (the submit button is disabled once they are). Use `E2E_WALLET=TEST_PASTOR1` or add courses with `CROSSWORD_COURSES` when the default wallet exhausted them; the spec skips (`[SKIP]`) instead of failing |
+
+### 5.5 Returning the funds of ephemeral wallets
+
+The specs that pay fund a fresh wallet from the one in `apps/.env`
+(`in-app-wallet-payments` transfers **0.5 CELO + 1 MUSDT**; the premium and cluster
+specs fund their own). Leaving those balances behind strands testnet money in
+wallets nobody revisits, so:
+
+- `in-app-wallet-payments` generates the key **in Node and imports it** (instead of a
+  random key created in the browser) and calls `sweepToTestWallet` before exiting and
+  on error: MUSDT/SLEARN in full plus the CELO above **0.05** (gas for the transfer).
+- For the wallets in the local registry (`apps/.e2e-wallets.local.json`, keys kept
+  out of git) run the sweep after a session:
+  ```sh
+  make test-e2e-sweep                                  # all registered wallets
+  make test-e2e-sweep SWEEP_ARGS="--since 2026-11-25 --dry-run"
+  ```
+  It skips the `apps/.env` wallet, skips zero balances and never leaves mainnet: the
+  helper refuses anything that is not Celo Sepolia.
+
+The helper is `e2e/helpers/ephemeral-funds.mjs` (`loadTestWallet`,
+`sweepToTestWallet`, `sweepRegistry`, `summarizeSweep`) and the CLI is
+`e2e/sweep-funds.mjs` (`--dry-run`, `--since <ISO>`, `--key 0x…`).
 
 ---
 

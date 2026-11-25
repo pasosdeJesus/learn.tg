@@ -233,9 +233,27 @@ async function main() {
   if (dialog.security && dialog.guide === '/en/migration-in-app-wallet') ok('el diálogo explica que la frase no sale del dispositivo y enlaza la guía')
   else fail(`el diálogo de importación no trae el aviso o la guía (${JSON.stringify(dialog)})`)
 
-  // R-#270 §13: también se puede importar la llave privada, y el botón no se habilita vacío.
-  if (dialog.privateKeyField && dialog.importDisabled === true) ok('el diálogo ofrece importar con llave privada y no deja importar en vacío')
-  else fail(`falta el campo de llave privada o el botón se habilita vacío (${JSON.stringify(dialog)})`)
+  // R-#270 §13: también se puede importar la llave privada. El diálogo graduado de
+  // `m` (REQ/75) no deshabilita el botón: valida al enviar y muestra el aviso de que
+  // hay que usar una de las dos fuentes. Se acepta cualquiera de los dos diseños; lo
+  // que no puede pasar es que un envío vacío importe algo.
+  if (!dialog.privateKeyField) {
+    fail(`falta el campo de llave privada (${JSON.stringify(dialog)})`)
+  } else if (dialog.importDisabled === true) {
+    ok('el diálogo ofrece importar con llave privada y no deja importar en vacío')
+  } else {
+    await importPage.click('[data-testid="wallet-import"]')
+    const hint = await importPage
+      .waitForSelector('[data-testid="wallet-dialog-error"]', { timeout: 5000 })
+      .then((el) => el.evaluate((node) => (node.textContent || '').trim()))
+      .catch(() => '')
+    const stillImport = await importPage.$('[data-testid="wallet-mnemonic"]')
+    if (hint && stillImport) {
+      ok(`el diálogo ofrece importar con llave privada y valida el envío vacío: "${hint.slice(0, 60)}"`)
+    } else {
+      fail(`el diálogo no valida la importación vacía (aviso="${hint}", formulario=${!!stillImport})`)
+    }
+  }
 
   await importPage.type('[data-testid="wallet-mnemonic"]', HARDHAT_MNEMONIC)
   await importPage.type('[data-testid="wallet-password"]', PASSWORD)

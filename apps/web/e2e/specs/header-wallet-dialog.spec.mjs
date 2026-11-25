@@ -18,7 +18,7 @@ import {
   initTestEnv, launchBrowser,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
-import { chooseWalletProtection } from '../helpers/in-app-wallet.mjs'
+import { chooseWalletProtection, completeBackupVerification } from '../helpers/in-app-wallet.mjs'
 
 const password = '12345678'
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -117,23 +117,67 @@ async function main() {
       await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 60000 })
       ok('Billetera creada y frase de recuperación visible')
 
-      // Cerrar sin firmar: al reabrir debe volver al inicio del flujo (no a la frase)
-      for (const button of await page.$$('button')) {
-        const text = ((await button.evaluate((el) => el.innerText)) || '').trim()
-        if (text === 'Close' || text === 'Cerrar') { await button.click(); break }
-      }
-      await sleep(1200)
-      await openDialog(page)
-      const reopened = await page.evaluate(() => {
+      // F2 (REQ/75): con la frase a la vista el modal NO se cierra — ni con la X
+      // (que se oculta), ni con Esc, ni con clic fuera. El acuse y el cuestionario
+      // de tres palabras son el único camino, para no perder el respaldo.
+      const closeButton = await page.evaluate(() => {
         const dialog = document.querySelector('[data-testid="wallet-dialog"]')
-        return {
-          recovery: !!dialog?.querySelector('[data-testid="wallet-recovery-words"]'),
-          unlock: !!dialog?.querySelector('[data-testid="wallet-unlock"]'),
-          text: (dialog?.innerText || '').replace(/\s+/g, ' ').slice(0, 120),
-        }
+        if (!dialog) return false
+        return [...dialog.querySelectorAll('button')].some((button) =>
+          /^(close|cerrar)$/i.test((button.innerText || '').trim()),
+        )
       })
-      if (reopened.recovery) fail('El modal reabrió en la frase de recuperación (debería empezar de nuevo)')
-      else ok(`El modal reabre al inicio del flujo${reopened.unlock ? ' (desbloqueo)' : ''}`)
+      if (closeButton) fail('El modal ofrece cerrar con la frase a la vista (no debe)')
+      else ok('Con la frase a la vista no hay botón de cerrar')
+      await page.keyboard.press('Escape')
+      await sleep(800)
+      if (await page.$('[data-testid="wallet-recovery-words"]')) {
+        ok('Esc no cierra mientras la frase está a la vista')
+      } else {
+        fail('Esc cerró el modal con la frase a la vista')
+      }
+
+      // Confirmar el respaldo (lee las 12 palabras y responde la posición que pide):
+      // al terminar, el envoltorio de learn.tg firma y cierra el diálogo.
+      const verifiedWords = await completeBackupVerification(page)
+      if (verifiedWords > 0) ok(`Respaldo confirmado (${verifiedWords} palabras)`)
+      else fail('No se pudieron leer las 12 palabras del respaldo')
+      for (let i = 0; i < 20; i++) {
+        if (!(await page.$('[data-testid="wallet-dialog"]'))) break
+        await sleep(1000)
+      }
+
+      // Reabrir: debe mostrar la billetera (o el ingreso), nunca la frase ni el alta.
+      // Con sesión, la píldora abre el **panel** de la billetera (R-#249); sin
+      // sesión, el diálogo. En ambos casos lo que importa es que no reaparezca la
+      // frase ni el alta. El panel puede tardar en montar (consulta la sesión), así
+      // que se reintenta el clic.
+      await openDialog(page)
+      let reopened = { open: false, panel: false, recovery: false, create: false, address: false }
+      for (let i = 0; i < 10; i++) {
+        reopened = await page.evaluate(() => {
+          const dialog = document.querySelector('[data-testid="wallet-dialog"]')
+          return {
+            open: !!dialog,
+            panel: !!document.querySelector('[data-testid="wallet-panel"]'),
+            recovery: !!dialog?.querySelector('[data-testid="wallet-recovery-words"]'),
+            create: !!dialog?.querySelector('[data-testid="wallet-password-confirm"]'),
+            address: !!dialog?.querySelector('[data-testid="wallet-address"], [data-testid="wallet-unlock"]'),
+          }
+        })
+        if (reopened.open || reopened.panel) break
+        await page.click('[data-testid="wallet-open-dialog"]').catch(() => {})
+        await sleep(1000)
+      }
+      if (reopened.recovery || reopened.create) {
+        fail('La cabecera reabrió en la frase o en el alta (debería mostrar la billetera)')
+      } else if (reopened.panel) {
+        ok('Con sesión, la cabecera abre el panel de la billetera (no la frase ni el alta)')
+      } else if (reopened.open) {
+        ok(`La cabecera reabre en la billetera${reopened.address ? '' : ' (vista sin dirección)'}`)
+      } else {
+        fail('Ni el panel ni el diálogo se abrieron tras confirmar el respaldo')
+      }
       await page.keyboard.press('Escape')
       await sleep(800)
     } else {

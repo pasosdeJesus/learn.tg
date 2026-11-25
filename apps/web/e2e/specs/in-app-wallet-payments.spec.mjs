@@ -22,7 +22,9 @@ import {
   initTestEnv, launchBrowser, newIncognitoContext,
   resetFailures, fail, ok, summary,
 } from '@pasosdejesus/m/e2e'
-import { chooseWalletProtection, completeBackupVerification } from '../helpers/in-app-wallet.mjs'
+import { generatePrivateKey } from 'viem/accounts'
+import { chooseWalletProtection } from '../helpers/in-app-wallet.mjs'
+import { sweepToTestWallet, summarizeSweep } from '../helpers/ephemeral-funds.mjs'
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
@@ -131,25 +133,47 @@ async function headerSignedIn(page) {
   return !!(await exists(page, '[data-testid="wallet-selector-in-app"]'))
 }
 
-/** Crea la billetera de la aplicación desde la cabecera y firma. */
+/**
+ * Llave de la billetera efímera de esta corrida. Se genera en Node y se **importa**
+ * (en vez de crear una al azar en el navegador) para poder devolver los fondos al
+ * terminar: `sweepEphemeral()` transfiere MUSDT/SLEARN y el CELO sobrante a
+ * `apps/.env`.
+ */
+let ephemeralKey = null
+
+async function sweepEphemeral() {
+  if (!ephemeralKey) return
+  const key = ephemeralKey
+  ephemeralKey = null
+  try {
+    const result = await sweepToTestWallet(key)
+    for (const line of summarizeSweep(result)) console.log(`  ${line}`)
+  } catch (error) {
+    console.log(`  [!] no se pudieron devolver los fondos: ${String(error?.message || error).slice(0, 120)}`)
+  }
+}
+
+/** Importa una billetera efímera (llave conocida por Node) y firma. */
 async function createInAppWallet(page, base) {
   await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
   await sleep(6000)
   if (await headerSignedIn(page)) return true
   if (!(await openDialog(page))) return false
-  const createForm = await page
-    .waitForSelector('[data-testid="wallet-password-confirm"]', { timeout: 30000 })
+  const importForm = await page
+    .waitForSelector('[data-testid="wallet-mode-import"]', { timeout: 30000 })
     .catch(() => null)
-  if (!createForm) {
+  if (!importForm) {
     await closeDialog(page)
     return false
   }
+  ephemeralKey = generatePrivateKey()
+  await page.click('[data-testid="wallet-mode-import"]')
+  await page.waitForSelector('[data-testid="wallet-private-key"]', { timeout: 15000 })
+  await page.type('[data-testid="wallet-private-key"]', ephemeralKey)
   await page.type('[data-testid="wallet-password"]', password)
   await page.type('[data-testid="wallet-password-confirm"]', password)
-  await page.click('[data-testid="wallet-create"]')
+  await page.click('[data-testid="wallet-import"]')
   await chooseWalletProtection(page)
-  await page.waitForSelector('[data-testid="wallet-recovery-words"]', { timeout: 90000 })
-  await completeBackupVerification(page)
   for (let i = 0; i < 30; i++) {
     await sleep(1500)
     if (await headerSignedIn(page)) return true
@@ -296,6 +320,7 @@ async function main() {
   if (!(await createInAppWallet(page, base))) {
     fail('No se pudo crear/ingresar con la billetera de la aplicación')
     const failures = summary(t0)
+    await sweepEphemeral()
     await browser.close()
     process.exit(failures > 0 ? 1 : 0)
   }
@@ -670,8 +695,13 @@ async function main() {
   }
   console.log(`\n(entorno: ${base})`)
   const failures = summary(t0)
+  await sweepEphemeral()
   await browser.close()
   process.exit(failures > 0 ? 1 : 0)
 }
 
-main().catch((error) => { console.error(error); process.exit(1) })
+main().catch(async (error) => {
+  console.error(error)
+  await sweepEphemeral().catch(() => {})
+  process.exit(1)
+})

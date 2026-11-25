@@ -346,6 +346,13 @@ test-e2e-spec:
 	IPDES=$${IPDES:-learn.tg} PUERTOPRU=$${PUERTOPRU:-9001} CHAIN_ID=$${CHAIN_ID:-11142220} \
 	./bin/m test:e2e "$(SPEC)"
 
+# Devuelve a la billetera de apps/.env lo que quede en las billeteras efímeras de
+# los specs (registro local `apps/.e2e-wallets.local.json`). Sólo testnet.
+#   make test-e2e-sweep                 # todas
+#   make test-e2e-sweep SWEEP_ARGS="--since 2026-11-25 --dry-run"
+test-e2e-sweep:
+	node e2e/sweep-funds.mjs $(SWEEP_ARGS)
+
 # Atajos por área. `SPEC` acepta cualquier patrón (el runner usa
 # `*<patrón>*.spec.mjs`), p. ej. `make test-e2e-spec SPEC=offline` corre los dos
 # specs offline. Estos son los del MVP (R-#244/R-#242):
