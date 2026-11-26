@@ -3,7 +3,7 @@
 > **Reglas de negocio, presentación, scopes y tipos por tabla:** [`../README.md`](../README.md)
 > (traducción de los concerns de msip-2.2, REQ/69). Este documento cubre el esquema, el baseline y las
 > migraciones. Los tipos de columna viven en `schema.generated.ts` (kysely-codegen desde el baseline; se
-> regeneran con `pnpm -C packages/msip schema:types`).
+> regeneran con `bin/m eng:types packages/msip`).
 
 > **El nombre:** `msip` es el **motor** (paquete `@pasosdejesus/msip`) que publica el **modelo base**: el
 > subconjunto del esquema de la aplicación [msip-2.2](https://gitlab.com/pasosdeJesus/msip) que `m`

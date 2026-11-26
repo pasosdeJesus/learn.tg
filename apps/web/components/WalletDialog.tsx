@@ -37,7 +37,9 @@ interface WalletDialogProps {
  * allí. Aquí quedan sólo las decisiones de esta aplicación: la firma SIWE con
  * invitaciones (R-#265), el RPC de la cadena actual, la guía de migración, la
  * clave de respaldo heredada y la limpieza de copias del dispositivo (R-#256).
- * El diálogo lo cierra este envoltorio al terminar la firma o el borrado.
+ * El diálogo lo cierra este envoltorio al terminar la firma, al recibir
+ * `onSignedIn` (también en el caso «ya había sesión», que antes dejaba el diálogo
+ * abierto) o al borrar la billetera.
  */
 export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }: WalletDialogProps) {
   const locale = lang === 'es' ? 'es' : 'en'
@@ -66,6 +68,13 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
     onOpenChange(false)
   }, [onOpenChange])
 
+  // Aviso del diálogo (m 0.41.2): llega tras firmar y también cuando la billetera ya
+  // tenía sesión y sólo hubo que desbloquearla. Es un aviso, no una orden: aquí el
+  // anfitrión decide cerrar, que es lo que espera el usuario tras quedar conectado.
+  const handleSignedIn = useCallback(() => {
+    onOpenChange(false)
+  }, [onOpenChange])
+
   return (
     <SharedWalletDialog
       open={open}
@@ -77,6 +86,7 @@ export function WalletDialog({ lang = 'en', open, onOpenChange, sessionAddress }
       rpcUrl={getRpcUrl()}
       sessionAddress={sessionAddress}
       signIn={signIn}
+      onSignedIn={handleSignedIn}
       onWalletRemoved={handleWalletRemoved}
       backup={{ storageKey: BACKUP_CONFIRMED_KEY }}
       logger={logger}

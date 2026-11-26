@@ -25,6 +25,11 @@ vi.mock('@pasosdejesus/m/wallet/next', () => ({
           data-testid="fake-removed"
           onClick={() => void (props.onWalletRemoved as () => Promise<void>)()}
         />
+        <button
+          type="button"
+          data-testid="fake-signed-in"
+          onClick={() => (props.onSignedIn as (address: string) => void)('0xabc')}
+        />
       </div>
     )
   },
@@ -107,5 +112,15 @@ describe('WalletDialog (envoltorio de learn.tg)', () => {
     const { onOpenChange, props } = renderDialog()
     ;(props.onOpenChange as (open: boolean) => void)(false)
     expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it('con sesión ya iniciada, el aviso onSignedIn del diálogo cierra (antes quedaba abierto)', () => {
+    const { onOpenChange, props } = renderDialog({ sessionAddress: ADDRESS })
+
+    expect(props.onSignedIn).toBeTypeOf('function')
+    fireEvent.click(screen.getByTestId('fake-signed-in'))
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+    // El aviso no dispara la firma: la sesión ya era de esta billetera.
+    expect(glue.signInWithInAppWallet).not.toHaveBeenCalled()
   })
 })

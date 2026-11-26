@@ -1,12 +1,12 @@
 {
   "motor": "@pasosdejesus/msip",
-  "version": "1.2.0",
-  "source": "https://gitlab.com/pasosdeJesus/m.git#msip-v1.2.0",
-  "sha256": "64bac09a0a61bca8df5cf42614a96acda3c7fa765c7105bd76a91f215f41157a",
+  "version": "1.2.1",
+  "source": "https://gitlab.com/pasosdeJesus/m#msip-v1.2.1",
+  "sha256": "660620f3934497a11a17f1f56736921a18b0a04c69968096031b70d262ae6923",
   "hash": "payload",
   "schemaSha256": "02cef10204be8c5f807efe2b25b1e9970579f5eca14d52481c02bfb271774b37",
   "kind": "git",
-  "origin": "https://gitlab.com/pasosdeJesus/m.git",
-  "ref": "msip-v1.2.0",
+  "origin": "https://gitlab.com/pasosdeJesus/m",
+  "ref": "msip-v1.2.1",
   "path": "packages/msip"
 }

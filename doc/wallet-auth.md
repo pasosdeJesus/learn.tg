@@ -253,7 +253,9 @@ backup key (`learn.tg.wallet.backupConfirmed`, so already-confirmed backups stay
 confirmed) and the device cleanup (`clearRestrictedCourseCopies`, R-#256). The flow
 itself (create/import, protect step, 12 words + three-word quiz, unlock, biometrics,
 delete) lives and is tested in the package; the wrapper closes the dialog after a
-successful sign-in and after the wallet is deleted.
+successful sign-in, after the wallet is deleted **and** when the package notifies
+`onSignedIn` (`m@0.41.2`), which covers the case where the wallet already had a session
+and only had to be unlocked (before that the dialog stayed open, see REQ/75 §10).
 
 Modal with the whole in-app flow (it does not belong in the header): create or
 import with a PIN, show the **12 words for manual backup** with a confirmation

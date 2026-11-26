@@ -1,9 +1,9 @@
 {
   "name": "generated-msip",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "type": "module",
-  "description": "Copia vendorizada de @pasosdejesus/msip v1.2.0, generada por `bin/m eng:sync --vendor`; no editar a mano.",
+  "description": "Copia vendorizada de @pasosdejesus/msip v1.2.1, generada por `bin/m eng:sync --vendor`; no editar a mano.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -36,7 +36,6 @@
   },
   "devDependencies": {
     "kysely": ">=0.28.0",
-    "typescript": "5.9.3",
-    "@types/node": "^20.19.41"
+    "typescript": "5.9.3"
   }
 }
